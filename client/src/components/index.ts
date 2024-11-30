@@ -1,3 +1,5 @@
-import TemplateComponent from './TemplateComponent'
+import AuthContainer from './AuthContainer'
+import Logo from './Logo'
+import UserMenu from './UserMenu'
 
-export { TemplateComponent }
+export { AuthContainer, Logo, UserMenu }

@@ -45,12 +45,4 @@ module.exports = {
     'jsx-a11y/role-supports-aria-props': 'warn',
     'no-empty-pattern': 'off'
   }
-  // settings: {
-  //   react: {
-  //     version: 'detect'
-  //   },
-  //   'import/parsers': {
-  //     [require.resolve('@typescript-eslint/parser')]: ['.ts', '.tsx', '.d.ts']
-  //   }
-  // }
 }

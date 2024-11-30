@@ -1,28 +1,31 @@
-import { useState } from 'react'
-
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { useMemo } from 'react'
 
 import AppRoutes from '@/Routes'
 
+import { ConfigProvider, theme } from 'antd'
+
+import { AuthProvider, useAuth } from '@/contexts/AuthProvider'
+
 function App() {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            // staleTime: 4 * 1000,
-            // refetchInterval: 4 * 1000
-          }
-        }
-      })
-  )
+  const { adminTheme } = useAuth()
+
+  const themeSelected = useMemo(() => {
+    return adminTheme === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm
+  }, [adminTheme])
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ReactQueryDevtools />
-      <AppRoutes />
-    </QueryClientProvider>
+    <AuthProvider>
+      <ConfigProvider
+        theme={{
+          algorithm: themeSelected,
+          token: {
+            colorPrimary: '#FF7A00'
+          }
+        }}
+      >
+        <AppRoutes />
+      </ConfigProvider>
+    </AuthProvider>
   )
 }
 

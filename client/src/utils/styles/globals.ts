@@ -1,13 +1,17 @@
 import styled, { createGlobalStyle } from 'styled-components'
-
-import Colors from './colors'
-// import Fonts from "../styles/fonts";
+import { Form } from 'antd'
 
 export const responsiveDesktop = '1000px'
 export const responsiveTablet = '760px'
 export const responsiveMobile = '500px'
 
-export const clientHeaderHeight = '70px'
+export const Sizes = {
+  dashboard: {
+    header: '60px',
+    menu: '280px',
+    viewMax: '1000px'
+  }
+}
 
 const GlobalStyle = createGlobalStyle`
   :root {
@@ -44,12 +48,12 @@ const GlobalStyle = createGlobalStyle`
   }
 
   ::-webkit-scrollbar-track {
-    background: ${Colors.scrollbarTrack};
+    background:  rgba(0, 0, 0, 0.1);
   }
 
   ::-webkit-scrollbar-thumb {
     border-radius: 10px;
-    background: ${Colors.scrollbarThumb};
+    background: rgba(0, 0, 0, 0.4);
   }
 `
 
@@ -57,8 +61,42 @@ export default GlobalStyle
 
 export const Screen = styled.div`
   display: flex;
-  flex-direction: column;
   width: 100%;
   height: fit-content;
   min-height: 100vh;
+`
+
+export const AuthForm = styled(Form)`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  row-gap: 10px;
+  width: 100%;
+
+  .ant-form-item {
+    width: 100%;
+    margin-bottom: 0px;
+
+    .ant-form-item-label {
+      padding-bottom: 5px;
+
+      label {
+        font-size: 12px;
+      }
+    }
+
+    .ant-input {
+      font-size: 14px;
+    }
+
+    .ant-form-item-explain-error {
+      margin-top: 5px;
+
+      font-size: 13px;
+    }
+  }
+
+  button[type='submit'] {
+    margin-top: 10px;
+  }
 `

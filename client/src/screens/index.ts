@@ -1,3 +1,5 @@
-import TemplateScreen from './TemplateScreen'
+import SignInScreen from './SignInScreen'
+import SignUpScreen from './SignUpScreen'
+import DashboardScreen from './DashboardScreen'
 
-export { TemplateScreen }
+export { SignInScreen, SignUpScreen, DashboardScreen }
