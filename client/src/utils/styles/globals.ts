@@ -8,9 +8,11 @@ export const responsiveMobile = '500px'
 export const Sizes = {
   dashboard: {
     header: '60px',
-    menu: '280px',
+    menu: '63px',
+    menuOpened: '240px',
     viewMax: '1000px'
-  }
+  },
+  spacing: '15px'
 }
 
 const GlobalStyle = createGlobalStyle`
