@@ -10,7 +10,7 @@ export const Sizes = {
     header: '60px',
     menu: '63px',
     menuOpened: '240px',
-    viewMax: '1000px'
+    viewMax: '1280px'
   },
   spacing: '15px'
 }
@@ -57,6 +57,53 @@ const GlobalStyle = createGlobalStyle`
     border-radius: 10px;
     background: rgba(0, 0, 0, 0.4);
   }
+
+  .ant-form-item {
+    width: 100%;
+    margin-bottom: 0px;
+
+    .ant-form-item-explain-error {
+      padding-top: 6px;
+
+      font-size: 12px;
+      line-height: 12px;
+    }
+
+    /* .ant-form-item-label {
+      padding-bottom: 5px;
+
+      label {
+        font-size: 12px;
+      }
+    }
+
+    .ant-input {
+      font-size: 14px;
+    }
+
+    .ant-form-item-explain-error {
+      margin-top: 5px;
+
+      font-size: 13px;
+    } */
+  }
+
+  .ant-popover-content {
+    .ant-popconfirm-title {
+      padding-top: 4px;
+
+      font-size: 15px;
+      line-height: 15px;
+    }
+  
+    .ant-popconfirm-description {
+      max-width: 260px;
+  
+      font-size: 14px;
+      line-height: 18px;
+    }
+  }
+
 `
 
 export default GlobalStyle

@@ -89,8 +89,5 @@ export const DashboardViewWrapper = styled.div`
   max-width: ${Sizes.dashboard.viewMax};
   height: fit-content;
   padding: 20px;
+  border-radius: 8px;
 `
-
-// export const OtherDashboardScreen = styled.div`
-//   display: flex;
-// `
