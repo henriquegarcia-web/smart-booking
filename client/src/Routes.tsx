@@ -25,14 +25,6 @@ const AppRoutes = () => {
             </PublicRoute>
           }
         />
-        <Route
-          path="/cadastrar"
-          element={
-            <PublicRoute isAuthenticated={isUserLogged}>
-              <SignUpScreen />
-            </PublicRoute>
-          }
-        />
 
         <Route
           path="/admin"
@@ -43,7 +35,6 @@ const AppRoutes = () => {
           }
         />
 
-        <Route path="/dashboard" element={<DashboardScreen />} />
         {/* =============================================================== */}
       </Routes>
     </BrowserRouter>

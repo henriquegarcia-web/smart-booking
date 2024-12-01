@@ -7,7 +7,7 @@ import { verifyToken } from '@/services/auth'
 import { useAllUsersProfile } from '@/hooks/data/useUser'
 
 interface IUser {
-  _id: string
+  id: string
   name?: string
   email: string
   blocked: boolean

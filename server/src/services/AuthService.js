@@ -36,28 +36,46 @@ export const handleRegisterUser = async (userData) => {
       throw new AuthError('USER_NOT_APROVED', 'Email não está aprovado.')
     }
 
-    console.log(existingUser)
-
     if (!existingUser.firstAccess) {
       throw new AuthError('USER_EXISTS', 'Usuário já cadastrado.')
     }
 
     const hashedPassword = await bcrypt.hash(userData.password, 10)
-    const user = new User({
-      ...userData,
-      firstAccess: false,
-      password: hashedPassword
-    })
-    await user.save()
+
+    const updatedUser = await User.findOneAndUpdate(
+      { email: userData.email },
+      {
+        ...userData,
+        firstAccess: false,
+        password: hashedPassword
+      },
+      { new: true, runValidators: true }
+    )
+
+    if (!updatedUser) {
+      throw new AuthError('USER_UPDATE_FAILED', 'Falha ao atualizar o usuário.')
+    }
 
     const token = jwt.sign(
-      { id: user._id, email: user.email, name: user.name },
+      { id: updatedUser._id, email: updatedUser.email, name: updatedUser.name },
       authConfig.jwtSecret,
       { expiresIn: authConfig.jwtExpiresIn }
     )
 
-    return { user, token }
+    const formattedUser = {
+      id: updatedUser._id,
+      email: updatedUser.email,
+      name: updatedUser.name,
+      blocked: updatedUser.blocked,
+      firstAccess: updatedUser.firstAccess,
+      role: updatedUser.role
+    }
+
+    return { user: formattedUser, token }
   } catch (error) {
+    if (error instanceof AuthError) {
+      throw error
+    }
     throw new AuthError('REGISTRATION_ERROR', 'Erro ao registrar usuário')
   }
 }
@@ -80,13 +98,22 @@ export const handleLoginUser = async ({ email, password }) => {
     throw new AuthError('INVALID_PASSWORD', 'Senha inválida')
   }
 
+  const formattedUser = {
+    id: user._id,
+    email: user.email,
+    name: user.name,
+    blocked: user.blocked,
+    firstAccess: user.firstAccess,
+    role: user.role
+  }
+
   const token = jwt.sign(
     { id: user._id, email: user.email, name: user.name },
     authConfig.jwtSecret,
     { expiresIn: authConfig.jwtExpiresIn }
   )
 
-  return { user, token }
+  return { user: formattedUser, token }
 }
 
 export const handleGetUserById = async (userId) => {

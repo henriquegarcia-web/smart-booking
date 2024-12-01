@@ -45,7 +45,7 @@ const columns: TableProps<DataType>['columns'] = [
     dataIndex: 'role',
     render: (role) => (
       <Tag color={role === 'admin' ? 'geekblue' : 'cyan'}>
-        {role.toUpperCase()}
+        {role === 'admin' ? 'ADMIN' : 'MEMBRO'}
       </Tag>
     )
   },
@@ -108,7 +108,7 @@ const UsersAccessView = ({}: IUsersAccessView) => {
     if (!allUsers) return []
 
     return allUsers.map((user) => ({
-      key: user._id,
+      key: user.id,
       name: user?.name || 'Não autenticado',
       email: user.email,
       blocked: user.blocked,

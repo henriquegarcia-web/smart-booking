@@ -8,7 +8,7 @@ import * as Yup from 'yup'
 import { useAuth } from '@/contexts/AuthProvider'
 import { useState } from 'react'
 
-const signInSchema = Yup.object().shape({
+const SignInSchema = Yup.object().shape({
   email: Yup.string().email('E-mail inválido').required('E-mail é obrigatório'),
   password: Yup.string().required('Senha é obrigatória'),
   name: Yup.string().when('isFirstAccess', {
@@ -16,8 +16,12 @@ const signInSchema = Yup.object().shape({
     then: (schema) => schema.required('Nome é obrigatório'),
     otherwise: (schema) => schema.notRequired()
   }),
-  isFirstAccess: Yup.boolean().required()
+  isFirstAccess: Yup.boolean().required(
+    'É obrigatório informar se é o primeiro acesso'
+  )
 })
+
+type ISignInForm = Yup.InferType<typeof SignInSchema>
 
 interface ISignInFormData {
   name?: string
@@ -32,16 +36,15 @@ const SignInScreen = () => {
   const navigate = useNavigate()
   const [isFirstAccess, setIsFirstAccess] = useState(false)
 
-  const { control, handleSubmit, formState, watch } = useForm<ISignInFormData>({
+  const { control, handleSubmit, formState, watch } = useForm<ISignInForm>({
     mode: 'all',
-    resolver: yupResolver(signInSchema),
+    resolver: yupResolver(SignInSchema),
     defaultValues: {
       name: '',
       email: '',
       password: '',
       isFirstAccess: false
-    },
-    context: { isFirstAccess }
+    }
   })
 
   const { errors, isSubmitting, isValid } = formState
@@ -68,8 +71,6 @@ const SignInScreen = () => {
     }
     if (success) {
       navigate('/playground')
-    } else {
-      console.error(data.isFirstAccess ? 'Registration failed' : 'Login failed')
     }
   }
 
@@ -113,7 +114,7 @@ const SignInScreen = () => {
             control={control}
             render={({ field }) => (
               <Form.Item
-                label="Senha"
+                label={isFirstAccess ? 'Criar Senha' : 'Senha'}
                 validateStatus={errors.password ? 'error' : ''}
                 help={errors.password?.message}
               >

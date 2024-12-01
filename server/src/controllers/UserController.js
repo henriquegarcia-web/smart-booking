@@ -6,7 +6,17 @@ import {
 export const getUserProfile = async (req, res) => {
   try {
     const user = await handleGetUserProfile(req.user.id)
-    res.status(200).json(user)
+
+    const formattedUser = {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      blocked: user.blocked,
+      firstAccess: user.firstAccess,
+      role: user.role
+    }
+
+    res.status(200).json(formattedUser)
   } catch (error) {
     res
       .status(404)
@@ -17,7 +27,17 @@ export const getUserProfile = async (req, res) => {
 export const getAllUsersProfile = async (req, res) => {
   try {
     const users = await handleGetAllUsers()
-    res.status(200).json(users)
+
+    const formattedUsers = users.map((user) => ({
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      blocked: user.blocked,
+      firstAccess: user.firstAccess,
+      role: user.role
+    }))
+
+    res.status(200).json(formattedUsers)
   } catch (error) {
     res
       .status(404)

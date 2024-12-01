@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import * as S from './styles'
 
@@ -6,10 +6,6 @@ import { Logo, UserMenu } from '@/components'
 import { Button, theme } from 'antd'
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi'
 import { adminMenusData, IMenu, menusData } from '@/data/menus'
-import type { MenuProps } from 'antd'
-import { Menu } from 'antd'
-
-type MenuItem = Required<MenuProps>['items'][number]
 
 interface IDashboardScreen {}
 
@@ -94,7 +90,10 @@ const DashboardScreen = ({}: IDashboardScreen) => {
         <S.DashboardHeader
           style={{ borderBottom: `1px solid ${token.colorBorder}` }}
         >
-          <S.DashboardNavigation>{/* <UserMenu /> */}</S.DashboardNavigation>
+          <div></div>
+          <S.DashboardNavigation>
+            <UserMenu />
+          </S.DashboardNavigation>
         </S.DashboardHeader>
         <S.DashboardView>
           <S.DashboardViewWrapper

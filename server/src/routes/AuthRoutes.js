@@ -5,13 +5,12 @@ import {
   loginUser,
   verifyToken
 } from '../controllers/AuthController.js'
-import { AuthMiddleware } from '../middleware/AuthMiddleware.js'
 
 const router = Router()
 
 router.post('/register-access', registerUserAccess)
-router.post('/register', AuthMiddleware, registerUser)
-router.post('/login', AuthMiddleware, loginUser)
-router.get('/verify-token', AuthMiddleware, verifyToken)
+router.post('/register', registerUser)
+router.post('/login', loginUser)
+router.get('/verify-token', verifyToken)
 
 export default router

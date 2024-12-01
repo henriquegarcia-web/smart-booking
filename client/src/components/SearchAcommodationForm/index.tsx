@@ -6,12 +6,10 @@ import {
   DatePicker,
   theme,
   ConfigProvider,
-  Space,
   Typography,
   Tooltip
 } from 'antd'
 const { RangePicker } = DatePicker
-const { Text } = Typography
 import locale from 'antd/locale/pt_BR'
 import dayjs, { Dayjs } from 'dayjs'
 import 'dayjs/locale/pt-br'
@@ -24,6 +22,7 @@ import { useForm, Controller, useFieldArray } from 'react-hook-form'
 const ApartmentSchema = Yup.object().shape({
   adultCount: Yup.number()
     .min(0, 'A quantidade de adultos não pode ser negativa')
+    .min(1, 'É preciso de no mínimo 1 adulto por apartamento')
     .required('A quantidade de adultos é obrigatória')
     .defined(),
   childCount: Yup.number()
@@ -40,6 +39,13 @@ const SearchAccommodationsSchema = Yup.object().shape({
   checkInOutDate: Yup.array()
     .of(Yup.date().nullable())
     .length(2)
+    .test(
+      'both-dates-filled',
+      'As datas de entrada e saída são obrigatórias',
+      (value) => {
+        return value && value[0] !== null && value[1] !== null
+      }
+    )
     .required('As datas de entrada e saída são obrigatórias')
     .defined(),
   apartments: Yup.array()
@@ -54,7 +60,7 @@ const SearchFormDefaultValues: ISearchForm = {
   checkInOutDate: [null, null],
   apartments: [
     {
-      adultCount: 0,
+      adultCount: 1,
       childCount: 0,
       seniorCount: 0
     }
@@ -73,6 +79,8 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
       defaultValues: SearchFormDefaultValues
     })
   const { errors, isSubmitting, isValid } = formState
+  const checkInOutDate = watch('checkInOutDate')
+  const isFormValid = isValid && checkInOutDate[0] && checkInOutDate[1]
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -175,7 +183,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                     <InputNumber
                       {...field}
                       addonBefore="Adultos"
-                      min={0}
+                      min={1}
                       placeholder="0"
                       width="100%"
                     />
@@ -230,7 +238,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
         <Button
           type="primary"
           htmlType="submit"
-          disabled={!isValid}
+          disabled={!isFormValid}
           loading={isSubmitting}
         >
           Buscar

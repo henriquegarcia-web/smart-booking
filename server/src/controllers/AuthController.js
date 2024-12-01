@@ -72,9 +72,14 @@ export const verifyToken = async (req, res) => {
         .status(404)
         .json({ code: 'USER_NOT_FOUND', message: 'Usuário não encontrado' })
     }
-    res
-      .status(200)
-      .json({ userId: user._id, email: user.email, name: user.name })
+    res.status(200).json({
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      blocked: user.blocked,
+      firstAccess: user.firstAccess,
+      role: user.role
+    })
   } catch (error) {
     res.status(400).json({ code: 'INVALID_TOKEN', message: 'Token inválido' })
   }
