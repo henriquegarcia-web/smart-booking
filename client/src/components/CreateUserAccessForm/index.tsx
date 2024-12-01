@@ -5,6 +5,7 @@ import * as Yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm, Controller } from 'react-hook-form'
 import { rolesData } from '@/data/roles'
+import { useAuth } from '@/contexts/AuthProvider'
 
 const createUserAccessSchema = Yup.object().shape({
   email: Yup.string()
@@ -15,6 +16,11 @@ const createUserAccessSchema = Yup.object().shape({
 })
 
 type ICreateForm = Yup.InferType<typeof createUserAccessSchema>
+
+interface ICreateFormData {
+  email: string
+  role: string
+}
 
 const CreateFormDefaultValues = {
   email: '',
@@ -27,6 +33,7 @@ interface ICreateUserAccessForm {
 
 const CreateUserAccessForm = ({ closeModal }: ICreateUserAccessForm) => {
   const { token } = theme.useToken()
+  const { handleRegisterAccess } = useAuth()
 
   const { control, handleSubmit, formState, reset } = useForm<ICreateForm>({
     mode: 'all',
@@ -40,21 +47,11 @@ const CreateUserAccessForm = ({ closeModal }: ICreateUserAccessForm) => {
     closeModal()
   }
 
-  const onSubmit = async (data: ICreateForm) => {
+  const onSubmit = async (data: ICreateFormData) => {
     console.log(data)
 
-    // const responseLogin = await handleLogin({
-    //   email: data.email,
-    //   password: data.password
-    // })
-
-    // if (responseLogin) {
-    //   handleResetForm()
-    // }
-  }
-
-  const handleChange = (value: string) => {
-    console.log(`selected ${value}`)
+    const success = await handleRegisterAccess(data)
+    if (success) handleResetForm()
   }
 
   const formattedRoles = rolesData.map((role) => ({

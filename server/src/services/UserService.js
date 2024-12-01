@@ -7,3 +7,14 @@ export const handleGetUserProfile = async (userId) => {
   }
   return user
 }
+
+export const handleGetAllUsers = async () => {
+  try {
+    const users = await User.find().select('-password')
+    if (users.length === 0) return []
+    return users
+  } catch (error) {
+    console.error('Error fetching users:', error)
+    throw new Error('Failed to fetch users')
+  }
+}

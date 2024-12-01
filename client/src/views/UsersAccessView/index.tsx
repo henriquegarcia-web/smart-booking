@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import * as S from './styles'
 
@@ -15,6 +15,7 @@ import {
 } from 'antd'
 import type { TableProps } from 'antd'
 import { FiTrash, FiXCircle } from 'react-icons/fi'
+import { useAuth } from '@/contexts/AuthProvider'
 
 interface DataType {
   key: string
@@ -42,7 +43,11 @@ const columns: TableProps<DataType>['columns'] = [
     title: 'Permissão',
     key: 'role',
     dataIndex: 'role',
-    render: (role) => <Tag color="geekblue">{role.toUpperCase()}</Tag>
+    render: (role) => (
+      <Tag color={role === 'admin' ? 'geekblue' : 'cyan'}>
+        {role.toUpperCase()}
+      </Tag>
+    )
   },
   {
     title: 'Bloqueado?',
@@ -84,39 +89,32 @@ const columns: TableProps<DataType>['columns'] = [
   }
 ]
 
-const data: DataType[] = [
-  {
-    key: '1',
-    name: 'John Brown',
-    email: 'john.brown@teste.com',
-    blocked: false,
-    role: 'admin'
-  },
-  {
-    key: '2',
-    name: 'Jim Green',
-    email: 'jimgeen@teste.com',
-    blocked: false,
-    role: 'admin'
-  },
-  {
-    key: '3',
-    name: 'Joe Black',
-    email: 'soealack@teste.com',
-    blocked: true,
-    role: 'admin'
-  }
-]
-
 interface IUsersAccessView {}
 
 const UsersAccessView = ({}: IUsersAccessView) => {
   const { token } = theme.useToken()
+  const { allUsers } = useAuth()
 
   const [createAccessModalOpen, setCreateAccessModalOpen] = useState(false)
 
   const handleOpenCreateAccessModal = () => setCreateAccessModalOpen(true)
   const handleCloseCreateAccessModal = () => setCreateAccessModalOpen(false)
+
+  // useEffect(() => {
+  //   console.log(allUsers)
+  // }, [allUsers])
+
+  const formattedUsersList = useMemo(() => {
+    if (!allUsers) return []
+
+    return allUsers.map((user) => ({
+      key: user._id,
+      name: user?.name || 'Não autenticado',
+      email: user.email,
+      blocked: user.blocked,
+      role: user.role
+    }))
+  }, [allUsers])
 
   return (
     <>
@@ -127,7 +125,7 @@ const UsersAccessView = ({}: IUsersAccessView) => {
         >
           <Button onClick={handleOpenCreateAccessModal}>Criar Acesso</Button>
         </ViewHeader>
-        <Table<DataType> columns={columns} dataSource={data} />
+        <Table<DataType> columns={columns} dataSource={formattedUsersList} />
       </S.UsersAccessView>
 
       <Modal

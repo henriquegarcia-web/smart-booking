@@ -1,5 +1,10 @@
 import api from '@/lib/fetch'
 
+interface RegisterAccessData {
+  email: string
+  role: string
+}
+
 interface RegisterData {
   name: string
   email: string
@@ -9,6 +14,15 @@ interface RegisterData {
 interface LoginData {
   email: string
   password: string
+}
+
+const registerAccess = async (userData: RegisterAccessData) => {
+  try {
+    const response = await api.post('/auth/register-access', userData)
+    return response.data
+  } catch (error: any) {
+    throw error.response?.data || error
+  }
 }
 
 const register = async (userData: RegisterData) => {
@@ -40,4 +54,4 @@ const verifyToken = async (token: string) => {
   }
 }
 
-export { register, login, verifyToken }
+export { registerAccess, register, login, verifyToken }

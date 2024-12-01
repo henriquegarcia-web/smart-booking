@@ -1,5 +1,15 @@
+import { queryClient } from '@/lib/react-query'
 import { useMutation } from '@tanstack/react-query'
-import { register, login } from '@/services/auth'
+import { registerAccess, register, login } from '@/services/auth'
+
+const useRegisterAccess = () => {
+  return useMutation({
+    mutationFn: registerAccess,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['usersProfiles'] })
+    }
+  })
+}
 
 const useRegister = () => {
   return useMutation({
@@ -13,4 +23,4 @@ const useLogin = () => {
   })
 }
 
-export { useRegister, useLogin }
+export { useRegisterAccess, useRegister, useLogin }

@@ -2,17 +2,17 @@ import { createContext, useContext, useMemo, useState, useEffect } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import { toast } from 'react-toastify'
 
-import { useRegister, useLogin } from '@/hooks/data/useAuth'
+import { useRegisterAccess, useRegister, useLogin } from '@/hooks/data/useAuth'
 import { verifyToken } from '@/services/auth'
+import { useAllUsersProfile } from '@/hooks/data/useUser'
 
 interface IUser {
-  id: string
-  name: string
-  cpf: string
-  phone: string
+  _id: string
+  name?: string
   email: string
-  pixKey: string
-  balance: number
+  blocked: boolean
+  firstAccess: boolean
+  role: string
 }
 
 type AdminTheme = 'light' | 'dark'
@@ -21,6 +21,7 @@ export interface IAuthContextData {
   isUserLogged: boolean
   user: IUser | null
   adminTheme: AdminTheme
+  allUsers: IUser[]
   handleLogin: (credentials: {
     email: string
     password: string
@@ -29,6 +30,10 @@ export interface IAuthContextData {
     name: string
     email: string
     password: string
+  }) => Promise<boolean>
+  handleRegisterAccess: (userData: {
+    email: string
+    role: string
   }) => Promise<boolean>
   handleLogout: () => void
 }
@@ -41,12 +46,17 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isUserLogged, setIsUserLogged] = useState<boolean>(false)
   const [token, setToken] = useState<string | null>(null)
   const [user, setUser] = useState<IUser | null>(null)
+  const [allUsers, setAllUsers] = useState<IUser[]>([])
   const [tokenExpiration, setTokenExpiration] = useState<number | null>(null)
 
   const adminTheme: AdminTheme = 'light'
 
+  const { mutateAsync: registerAccess } = useRegisterAccess()
   const { mutateAsync: register } = useRegister()
   const { mutateAsync: login } = useLogin()
+
+  const { data: usersProfilesData, isSuccess: isUsersProfilesSuccess } =
+    useAllUsersProfile()
 
   const handleLogin = async (credentials: {
     email: string
@@ -109,6 +119,23 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
+  const handleRegisterAccess = async (userData: {
+    email: string
+    role: string
+  }) => {
+    try {
+      await registerAccess(userData)
+      setIsUserLogged(true)
+
+      toast('Sucesso! Seja bem-vindo')
+      return true
+    } catch (error: any) {
+      console.error('Falha ao realizar cadastro', error)
+      toast(error.message)
+      return false
+    }
+  }
+
   const handleLogout = () => {
     setToken(null)
     setUser(null)
@@ -151,6 +178,12 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   useEffect(() => {
+    if (isUsersProfilesSuccess && usersProfilesData) {
+      setAllUsers(usersProfilesData)
+    }
+  }, [isUsersProfilesSuccess, usersProfilesData])
+
+  useEffect(() => {
     checkTokenValidity()
 
     const interval = setInterval(() => {
@@ -163,18 +196,20 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, 5 * 60 * 1000)
 
     return () => clearInterval(interval)
-  }, [token, tokenExpiration])
+  }, [token, tokenExpiration, allUsers])
 
   const AuthContextData: IAuthContextData = useMemo(() => {
     return {
       isUserLogged,
       user,
       adminTheme,
+      allUsers,
       handleLogin,
       handleRegister,
+      handleRegisterAccess,
       handleLogout
     }
-  }, [isUserLogged, user, adminTheme])
+  }, [isUserLogged, user, adminTheme, allUsers])
 
   return (
     <AuthContext.Provider value={AuthContextData}>

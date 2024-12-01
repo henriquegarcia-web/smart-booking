@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchUserProfile } from '@/services/user'
+import { fetchUserProfile, fetchUsersProfiles } from '@/services/user'
 
 const useUserProfile = () => {
   return useQuery({
@@ -8,4 +8,11 @@ const useUserProfile = () => {
   })
 }
 
-export { useUserProfile }
+const useAllUsersProfile = () => {
+  return useQuery({
+    queryKey: ['usersProfiles'],
+    queryFn: fetchUsersProfiles
+  })
+}
+
+export { useUserProfile, useAllUsersProfile }

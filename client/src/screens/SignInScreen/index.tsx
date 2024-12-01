@@ -1,43 +1,75 @@
 import { useNavigate } from 'react-router-dom'
-
 import * as S from './styles'
-
 import { AuthContainer } from '@/components'
-import { Button, Input, Form, theme } from 'antd'
-
-import { useForm, Controller, Resolver } from 'react-hook-form'
+import { Button, Input, Form, theme, Checkbox } from 'antd'
+import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
-
-import { signInSchema } from '@/utils/schemas/auth'
+import * as Yup from 'yup'
 import { useAuth } from '@/contexts/AuthProvider'
+import { useState } from 'react'
+
+const signInSchema = Yup.object().shape({
+  email: Yup.string().email('E-mail inválido').required('E-mail é obrigatório'),
+  password: Yup.string().required('Senha é obrigatória'),
+  name: Yup.string().when('isFirstAccess', {
+    is: true,
+    then: (schema) => schema.required('Nome é obrigatório'),
+    otherwise: (schema) => schema.notRequired()
+  }),
+  isFirstAccess: Yup.boolean().required()
+})
 
 interface ISignInFormData {
+  name?: string
   email: string
   password: string
+  isFirstAccess: boolean
 }
 
 const SignInScreen = () => {
   const { token } = theme.useToken()
-  const { handleLogin } = useAuth()
+  const { handleLogin, handleRegister } = useAuth()
   const navigate = useNavigate()
+  const [isFirstAccess, setIsFirstAccess] = useState(false)
 
-  const { control, handleSubmit, formState } = useForm<ISignInFormData>({
-    mode: 'onBlur',
-    resolver: yupResolver(signInSchema) as Resolver<ISignInFormData>,
+  const { control, handleSubmit, formState, watch } = useForm<ISignInFormData>({
+    mode: 'all',
+    resolver: yupResolver(signInSchema),
     defaultValues: {
+      name: '',
       email: '',
-      password: ''
-    }
+      password: '',
+      isFirstAccess: false
+    },
+    context: { isFirstAccess }
   })
 
   const { errors, isSubmitting, isValid } = formState
+  const watchIsFirstAccess = watch('isFirstAccess')
 
   const onSubmit = async (data: ISignInFormData) => {
-    const success = await handleLogin(data)
+    let success
+    if (data.isFirstAccess) {
+      if (data.name) {
+        success = await handleRegister({
+          name: data.name,
+          email: data.email,
+          password: data.password
+        })
+      } else {
+        console.error('Nome é obrigatório para registro')
+        return
+      }
+    } else {
+      success = await handleLogin({
+        email: data.email,
+        password: data.password
+      })
+    }
     if (success) {
       navigate('/playground')
     } else {
-      console.error('Login failed')
+      console.error(data.isFirstAccess ? 'Registration failed' : 'Login failed')
     }
   }
 
@@ -48,10 +80,24 @@ const SignInScreen = () => {
           onSubmitCapture={handleSubmit(onSubmit)}
           layout="vertical"
         >
+          {watchIsFirstAccess && (
+            <Controller
+              name="name"
+              control={control}
+              render={({ field }) => (
+                <Form.Item
+                  label="Nome"
+                  validateStatus={errors.name ? 'error' : ''}
+                  help={errors.name?.message}
+                >
+                  <Input {...field} placeholder="Digite seu nome" />
+                </Form.Item>
+              )}
+            />
+          )}
           <Controller
             name="email"
             control={control}
-            rules={{ required: 'Este campo é obrigatório' }}
             render={({ field }) => (
               <Form.Item
                 label="E-mail"
@@ -65,7 +111,6 @@ const SignInScreen = () => {
           <Controller
             name="password"
             control={control}
-            rules={{ required: 'Este campo é obrigatório' }}
             render={({ field }) => (
               <Form.Item
                 label="Senha"
@@ -76,13 +121,30 @@ const SignInScreen = () => {
               </Form.Item>
             )}
           />
+          <S.SignInFormFirstAccess>
+            <p>Primeiro acesso?</p>
+            <Controller
+              name="isFirstAccess"
+              control={control}
+              render={({ field }) => (
+                <Checkbox
+                  {...field}
+                  checked={field.value}
+                  onChange={(e) => {
+                    field.onChange(e.target.checked)
+                    setIsFirstAccess(e.target.checked)
+                  }}
+                />
+              )}
+            />
+          </S.SignInFormFirstAccess>
           <Button
             type="primary"
             htmlType="submit"
             disabled={!isValid}
             loading={isSubmitting}
           >
-            Entrar
+            {watchIsFirstAccess ? 'Registrar' : 'Entrar'}
           </Button>
         </S.SignInForm>
       </AuthContainer>

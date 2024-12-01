@@ -20,7 +20,7 @@ const AuthContainer = ({ type, children }: IAuthContainer) => {
         </h2>
       </S.AuthHeader>
       <S.AuthContent>{children}</S.AuthContent>
-      <S.AuthFooter>
+      {/* <S.AuthFooter>
         {type === 'signin' ? (
           <p style={{ color: token.colorTextLabel }}>
             Não possui cadastro?{' '}
@@ -36,7 +36,7 @@ const AuthContainer = ({ type, children }: IAuthContainer) => {
             </Link>
           </p>
         )}
-      </S.AuthFooter>
+      </S.AuthFooter> */}
     </S.AuthContainer>
   )
 }
