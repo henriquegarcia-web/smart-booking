@@ -4,7 +4,13 @@ import { toast } from 'react-toastify'
 
 import { useRegisterAccess, useRegister, useLogin } from '@/hooks/data/useAuth'
 import { verifyToken } from '@/services/auth'
+// import {
+//   useAllUsersProfile,
+//   useDeleteUser,
+//   useToggleUserBlock
+// } from '@/hooks/data/useUser'
 import {
+  useUserProfile,
   useAllUsersProfile,
   useDeleteUser,
   useToggleUserBlock
@@ -15,11 +21,19 @@ import { useQueryClient } from '@tanstack/react-query'
 
 type AdminTheme = 'light' | 'dark'
 
-export interface IAuthContextData {
-  isUserLogged: boolean
-  user: IUser | null
+interface IAuthContextData {
   adminTheme: AdminTheme
-  allUsers: IUser[]
+  isUserLogged: boolean
+  user: {
+    data: IUser | undefined
+    isLoading: boolean
+    error: Error | null
+  }
+  users: {
+    data: IUser[] | undefined
+    isLoading: boolean
+    error: Error | null
+  }
   isUserOperationsLoading: boolean
   handleLogin: (credentials: {
     email: string
@@ -60,15 +74,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { mutateAsync: register } = useRegister()
   const { mutateAsync: login } = useLogin()
 
-  const { mutateAsync: deleteUserMutation } = useDeleteUser()
-  const { mutateAsync: toggleUserBlockMutation } = useToggleUserBlock()
+  const userData = useUserProfile(user ? user.id : '')
+  const usersData = useAllUsersProfile()
 
-  const shouldFetchAllUsers = isUserLogged && user?.role === 'admin'
-
-  const { data: allUsers = [], isLoading: isAllUsersLoading } =
-    useAllUsersProfile({
-      enabled: shouldFetchAllUsers
-    })
+  const { mutateAsync: deleteUser } = useDeleteUser()
+  const { mutateAsync: toggleUserBlock } = useToggleUserBlock()
 
   const handleLogin = async (credentials: {
     email: string
@@ -157,10 +167,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const verifyCurrentUser = async (token: string) => {
     try {
       const response = await verifyToken(token)
-      setUser({
-        id: response.userId,
-        ...response
-      })
+      setUser(response)
     } catch (error) {
       console.error('Falha na verificação do Token', error)
       handleLogout()
@@ -194,7 +201,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
       setIsUserOperationsLoading(true)
-      await deleteUserMutation(userId)
+      await deleteUser({ userId })
       queryClient.invalidateQueries({ queryKey: ['usersProfiles'] })
       toast('Usuário deletado com sucesso')
     } catch (error: any) {
@@ -216,7 +223,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
       setIsUserOperationsLoading(true)
-      await toggleUserBlockMutation({ userId, blockStatus })
+      await toggleUserBlock({ userId, blockStatus })
       queryClient.invalidateQueries({ queryKey: ['usersProfiles'] })
       const action = blockStatus ? 'bloqueado' : 'desbloqueado'
       toast(`Usuário ${action} com sucesso`)
@@ -245,11 +252,20 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const AuthContextData: IAuthContextData = useMemo(() => {
     return {
-      isUserLogged,
-      user,
       adminTheme,
-      allUsers,
-      isUserOperationsLoading: isUserOperationsLoading || isAllUsersLoading,
+      isUserLogged,
+      user: {
+        data: userData.data,
+        isLoading: userData.isLoading,
+        error: userData.error
+      },
+      users: {
+        data: usersData.data,
+        isLoading: usersData.isLoading,
+        error: usersData.error
+      },
+      isUserOperationsLoading:
+        isUserOperationsLoading || userData.isLoading || usersData.isLoading,
       handleLogin,
       handleRegister,
       handleRegisterAccess,
@@ -258,12 +274,12 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       handleToggleUserBlock
     }
   }, [
+    adminTheme,
     isUserLogged,
     user,
-    adminTheme,
-    allUsers,
-    isUserOperationsLoading,
-    isAllUsersLoading
+    userData,
+    usersData,
+    isUserOperationsLoading
   ])
 
   return (

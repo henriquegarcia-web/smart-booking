@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import * as S from './styles'
 
@@ -14,7 +14,7 @@ import {
   Tooltip
 } from 'antd'
 import type { TableProps } from 'antd'
-import { FiTrash, FiXCircle } from 'react-icons/fi'
+import { FiLock, FiTrash, FiUnlock } from 'react-icons/fi'
 import { useAuth } from '@/contexts/AuthProvider'
 
 interface DataType {
@@ -31,7 +31,7 @@ const UsersAccessView = ({}: IUsersAccessView) => {
   const { token } = theme.useToken()
   const {
     user,
-    allUsers,
+    users,
     handleDeleteUser,
     handleToggleUserBlock,
     isUserOperationsLoading
@@ -81,29 +81,32 @@ const UsersAccessView = ({}: IUsersAccessView) => {
             placement="bottomRight"
             title="Deletar usuário"
             arrow={true}
-            open={record.key !== user.id ? undefined : false}
+            open={record.key !== user.data.id ? undefined : false}
           >
             <Popconfirm
-              title="Deletar usuário"
+              title="Deletar"
               description="Tem certeza que deseja deletar esse usuário? Essa ação não poderá ser desfeita."
               onConfirm={() => handleDeleteUser(record.key)}
               okButtonProps={{ loading: isUserOperationsLoading }}
-              okText="Sim, deletar"
+              okText="Sim"
               cancelText="Cancelar"
               placement="topRight"
-              disabled={record.key === user.id}
+              disabled={record.key === user.data.id}
             >
-              <Button icon={<FiTrash />} disabled={record.key === user.id} />
+              <Button
+                icon={<FiTrash />}
+                disabled={record.key === user.data.id}
+              />
             </Popconfirm>
           </Tooltip>
           <Tooltip
             placement="bottomRight"
-            title="Bloquear usuário"
+            title={!record.blocked ? 'Bloquear usuário' : 'Desbloquear usuário'}
             arrow={true}
-            open={record.key !== user.id ? undefined : false}
+            open={record.key !== user.data.id ? undefined : false}
           >
             <Popconfirm
-              title="Bloquear usuário"
+              title={!record.blocked ? 'Bloquear' : 'Desbloquear'}
               description={
                 !record.blocked
                   ? 'Tem certeza que deseja bloquear esse usuário?'
@@ -113,12 +116,15 @@ const UsersAccessView = ({}: IUsersAccessView) => {
                 handleToggleUserBlock(record.key, !record.blocked)
               }
               okButtonProps={{ loading: isUserOperationsLoading }}
-              okText={!record.blocked ? 'Sim, bloquear' : 'Sim, desbloquear'}
+              okText="Sim"
               cancelText="Cancelar"
               placement="topRight"
-              disabled={record.key === user.id}
+              disabled={record.key === user.data.id}
             >
-              <Button icon={<FiXCircle />} disabled={record.key === user.id} />
+              <Button
+                icon={record.blocked ? <FiLock /> : <FiUnlock />}
+                disabled={record.key === user.data.id}
+              />
             </Popconfirm>
           </Tooltip>
         </S.TableActions>
@@ -127,18 +133,18 @@ const UsersAccessView = ({}: IUsersAccessView) => {
   ]
 
   const formattedUsersList = useMemo(() => {
-    if (!allUsers) return []
+    if (!users) return []
 
-    return allUsers.map((userData) => ({
+    return users.data.map((userData) => ({
       key: userData.id,
       name: userData?.name
-        ? `${userData.name}${userData?.id === user?.id && ' (Você)'}`
+        ? `${userData.name}${userData?.id === user?.data.id ? ' (Você)' : ''}`
         : 'Não autenticado',
       email: userData.email,
       blocked: userData.blocked,
       role: userData.role
     }))
-  }, [allUsers])
+  }, [users])
 
   return (
     <>

@@ -21,24 +21,24 @@ const UserMenu = ({}: IUserMenu) => {
     }
   ]
 
-  if (!user) return <>Carregando...</>
+  if (!user || !user?.data || user.isLoading) return <>Carregando...</>
 
   return (
     <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
       <S.UserMenu token={token}>
         <S.UserMenuInfos>
           <p style={{ color: token.colorTextHeading }}>
-            Olá, <b>{user.name}</b>
+            Olá, <b>{user.data.name}</b>
           </p>
-          <Tag color={user.role === 'admin' ? 'geekblue' : 'cyan'}>
-            {user.role === 'admin' ? 'ADMIN' : 'MEMBRO'}
+          <Tag color={user.data.role === 'admin' ? 'geekblue' : 'cyan'}>
+            {user.data.role === 'admin' ? 'ADMIN' : 'MEMBRO'}
           </Tag>
         </S.UserMenuInfos>
         <Avatar
           style={{ backgroundColor: '#fde3cf', color: '#f56a00' }}
           size={34}
         >
-          {formatUsername(user.name)}
+          {formatUsername(user.data.name)}
         </Avatar>
       </S.UserMenu>
     </Dropdown>

@@ -43,13 +43,11 @@ const CreateUserAccessForm = ({ closeModal }: ICreateUserAccessForm) => {
   const { errors, isSubmitting, isValid } = formState
 
   const handleResetForm = () => {
-    reset(CreateFormDefaultValues)
+    reset()
     closeModal()
   }
 
   const onSubmit = async (data: ICreateFormData) => {
-    console.log(data)
-
     const success = await handleRegisterAccess(data)
     if (success) handleResetForm()
   }

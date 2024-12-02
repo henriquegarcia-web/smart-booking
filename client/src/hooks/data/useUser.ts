@@ -1,11 +1,4 @@
-import {
-  QueryKey,
-  useMutation,
-  UseMutationResult,
-  useQuery,
-  useQueryClient,
-  UseQueryOptions
-} from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   fetchUserProfile,
   fetchUsersProfiles,
@@ -13,51 +6,47 @@ import {
   toggleUserBlock
 } from '@/services/user'
 import { IUser } from '@/types/globals'
-// import { queryClient } from '@/lib/react-query'
 
-const useUserProfile = (
-  options?: Partial<UseQueryOptions<IUser, Error, IUser, QueryKey>>
-) => {
-  return useQuery<IUser, Error, IUser, QueryKey>({
-    queryKey: ['userProfile'],
-    queryFn: fetchUserProfile,
-    ...options
+const useUserProfile = (userId: string) => {
+  return useQuery<IUser>({
+    queryKey: ['userProfile', userId],
+    queryFn: async () => {
+      const user = await fetchUserProfile(userId)
+      return user
+    },
+    enabled: !!userId
   })
 }
 
-const useAllUsersProfile = (
-  options?: Partial<UseQueryOptions<IUser[], Error, IUser[], QueryKey>>
-) => {
-  return useQuery<IUser[], Error, IUser[], QueryKey>({
+const useAllUsersProfile = () => {
+  return useQuery<IUser[]>({
     queryKey: ['usersProfiles'],
-    queryFn: fetchUsersProfiles,
-    ...options
+    queryFn: async () => {
+      const users = await fetchUsersProfiles()
+      return users
+    }
+    // staleTime: 1000 * 60 * 5
   })
 }
 
-const useDeleteUser = (): UseMutationResult<any, Error, string, unknown> => {
-  return useMutation({
-    mutationFn: deleteUser,
-    onSuccess: () => {
-      const queryClient = useQueryClient()
+const useDeleteUser = () => {
+  const queryClient = useQueryClient()
 
+  return useMutation({
+    mutationFn: async (data: { userId: string }) => deleteUser(data.userId),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['usersProfiles'] })
     }
   })
 }
 
-const useToggleUserBlock = (): UseMutationResult<
-  any,
-  Error,
-  { userId: string; blockStatus: boolean },
-  unknown
-> => {
-  return useMutation({
-    mutationFn: ({ userId, blockStatus }) =>
-      toggleUserBlock(userId, blockStatus),
-    onSuccess: () => {
-      const queryClient = useQueryClient()
+const useToggleUserBlock = () => {
+  const queryClient = useQueryClient()
 
+  return useMutation({
+    mutationFn: async (data: { userId: string; blockStatus: boolean }) =>
+      toggleUserBlock(data.userId, data.blockStatus),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['usersProfiles'] })
     }
   })

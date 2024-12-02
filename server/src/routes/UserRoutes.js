@@ -9,7 +9,7 @@ import { AuthMiddleware } from '../middleware/AuthMiddleware.js'
 
 const router = Router()
 
-router.get('/profile', getUserProfile)
+router.get('/profile/:userId', getUserProfile)
 router.get('/profiles', getAllUsersProfile)
 router.delete('/delete/:userId', deleteUser)
 router.put('/block/:userId', toggleUserBlock)

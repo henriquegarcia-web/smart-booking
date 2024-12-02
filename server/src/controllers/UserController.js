@@ -7,7 +7,7 @@ import {
 
 export const getUserProfile = async (req, res) => {
   try {
-    const user = await handleGetUserProfile(req.user.id)
+    const user = await handleGetUserProfile(req.params.userId)
 
     const formattedUser = {
       id: user._id,

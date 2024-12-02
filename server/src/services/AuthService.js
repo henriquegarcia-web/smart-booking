@@ -36,6 +36,10 @@ export const handleRegisterUser = async (userData) => {
       throw new AuthError('USER_NOT_APROVED', 'Email não está aprovado.')
     }
 
+    if (existingUser.blocked) {
+      throw new AuthError('USER_BLOCKED', 'Usuário bloqueado')
+    }
+
     if (!existingUser.firstAccess) {
       throw new AuthError('USER_EXISTS', 'Usuário já cadastrado.')
     }
@@ -84,6 +88,10 @@ export const handleLoginUser = async ({ email, password }) => {
   const user = await User.findOne({ email })
   if (!user) {
     throw new AuthError('USER_NOT_FOUND', 'Usuário não encontrado')
+  }
+
+  if (user.blocked) {
+    throw new AuthError('USER_BLOCKED', 'Usuário bloqueado')
   }
 
   if (user.firstAccess) {
