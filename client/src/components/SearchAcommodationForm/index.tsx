@@ -2,11 +2,9 @@ import * as S from './styles'
 import {
   Button,
   Form,
-  InputNumber,
   DatePicker,
   theme,
   ConfigProvider,
-  Typography,
   Tooltip,
   Select
 } from 'antd'
@@ -19,7 +17,11 @@ dayjs.locale('pt-br')
 import * as Yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
-import { discountRateData, pensionSchemeData } from '@/data/admin'
+import {
+  discountRate,
+  filterCountsLimit,
+  pensionSchemeData
+} from '@/data/admin'
 
 const ApartmentSchema = Yup.object().shape({
   adultCount: Yup.number()
@@ -52,8 +54,8 @@ const SearchAccommodationsSchema = Yup.object().shape({
     .defined(),
   boardPlan: Yup.string()
     .required('O regime de pensão é obrigatório')
-    .defined(),
-  discountRate: Yup.number(),
+    .nullable(),
+  discountRate: Yup.number().nullable(),
   apartments: Yup.array()
     .of(ApartmentSchema)
     .min(1, 'Selecione pelo menos um apartamento')
@@ -65,8 +67,8 @@ type ISearchForm = Yup.InferType<typeof SearchAccommodationsSchema>
 
 const SearchFormDefaultValues: ISearchForm = {
   checkInOutDate: [null, null],
-  boardPlan: '',
-  discountRate: 0,
+  boardPlan: undefined,
+  discountRate: undefined,
   apartments: [
     {
       adultCount: 1,
@@ -81,12 +83,19 @@ interface ISearchAccommodationForm {}
 const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
   const { token } = theme.useToken()
 
-  const { control, handleSubmit, formState, reset, watch } =
-    useForm<ISearchForm>({
-      mode: 'all',
-      resolver: yupResolver(SearchAccommodationsSchema),
-      defaultValues: SearchFormDefaultValues
-    })
+  const {
+    control,
+    handleSubmit,
+    formState,
+    reset,
+    watch,
+    setValue,
+    resetField
+  } = useForm<ISearchForm>({
+    mode: 'all',
+    resolver: yupResolver(SearchAccommodationsSchema),
+    defaultValues: SearchFormDefaultValues
+  })
   const { errors, isSubmitting, isValid } = formState
   const checkInOutDate = watch('checkInOutDate')
   const isFormValid = isValid && checkInOutDate[0] && checkInOutDate[1]
@@ -112,12 +121,34 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
   }))
 
   const formattedDiscountRates = Array.from(
-    { length: discountRateData },
+    { length: discountRate },
     (_, index) => ({
       value: index + 1,
       label: `${index + 1}%`
     })
   )
+
+  const getFormattedCountOptions = (label: string) => {
+    const formattedCountOptions = Array.from(
+      { length: filterCountsLimit },
+      (_, index) => ({
+        value: index + 1,
+        label: `${index + 1} ${label}${index + 1 > 1 ? 's' : ''}`
+      })
+    )
+    return formattedCountOptions
+  }
+
+  const getFormattedCountFullOptions = (label: string) => {
+    const formattedCountFullOptions = Array.from(
+      { length: filterCountsLimit },
+      (_, index) => ({
+        value: index,
+        label: `${index} ${label}${index === 1 ? '' : 's'}`
+      })
+    )
+    return formattedCountFullOptions
+  }
 
   return (
     <S.SearchAccommodationForm
@@ -164,7 +195,6 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
           control={control}
           render={({ field }) => (
             <Form.Item
-              name="boardPlan"
               label="Regime de pensão"
               validateStatus={!!errors.boardPlan ? 'error' : ''}
               help={errors?.boardPlan?.message || null}
@@ -172,10 +202,8 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
               <Select
                 {...field}
                 placeholder="Selecione uma opção"
-                onChange={(value) => {
-                  field.onChange(value)
-                }}
                 options={formattedPensionScheme}
+                allowClear
               />
             </Form.Item>
           )}
@@ -185,7 +213,6 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
           control={control}
           render={({ field }) => (
             <Form.Item
-              name="discountRate"
               label="Desconto (Opcional)"
               validateStatus={!!errors.discountRate ? 'error' : ''}
               help={errors?.discountRate?.message || null}
@@ -193,10 +220,8 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
               <Select
                 {...field}
                 placeholder="Selecione uma opção"
-                onChange={(value) => {
-                  field.onChange(value)
-                }}
                 options={formattedDiscountRates}
+                allowClear
               />
             </Form.Item>
           )}
@@ -208,7 +233,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
           <Button
             style={{ width: 'fit-content' }}
             onClick={() =>
-              append({ adultCount: 0, childCount: 0, seniorCount: 0 })
+              append({ adultCount: 1, childCount: 0, seniorCount: 0 })
             }
           >
             Adicionar Apartamento
@@ -244,12 +269,13 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                     }
                     help={errors.apartments?.[index]?.adultCount?.message}
                   >
-                    <InputNumber
+                    <Select
                       {...field}
-                      addonBefore="Adultos"
-                      min={1}
-                      placeholder="0"
-                      width="100%"
+                      placeholder="Selecione uma opção"
+                      onChange={(value) => {
+                        field.onChange(value)
+                      }}
+                      options={getFormattedCountOptions('adulto')}
                     />
                   </Form.Item>
                 )}
@@ -264,11 +290,13 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                     }
                     help={errors.apartments?.[index]?.childCount?.message}
                   >
-                    <InputNumber
+                    <Select
                       {...field}
-                      addonBefore="Crianças"
-                      min={0}
-                      placeholder="0"
+                      placeholder="Selecione uma opção"
+                      onChange={(value) => {
+                        field.onChange(value)
+                      }}
+                      options={getFormattedCountFullOptions('criança')}
                     />
                   </Form.Item>
                 )}
@@ -283,11 +311,13 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                     }
                     help={errors.apartments?.[index]?.seniorCount?.message}
                   >
-                    <InputNumber
+                    <Select
                       {...field}
-                      addonBefore="Idosos"
-                      min={0}
-                      placeholder="0"
+                      placeholder="Selecione uma opção"
+                      onChange={(value) => {
+                        field.onChange(value)
+                      }}
+                      options={getFormattedCountFullOptions('idoso')}
                     />
                   </Form.Item>
                 )}

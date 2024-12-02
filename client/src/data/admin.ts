@@ -40,8 +40,12 @@ const pensionSchemeData: IPensionScheme[] = [
 
 // ==================================== DISCOUNTS
 
-const discountRateData = 7
+const discountRate = 7
+
+// ==================================== FILTER FORM
+
+const filterCountsLimit = 8
 
 // ==================================== EXPORTS
 
-export { rolesData, pensionSchemeData, discountRateData }
+export { rolesData, pensionSchemeData, discountRate, filterCountsLimit }

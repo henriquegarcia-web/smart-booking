@@ -10,7 +10,7 @@ export const SearchAccommodationForm = styled(Form)`
 
   .ant-picker-range {
     width: 100%;
-    min-width: 340px;
+    min-width: 300px;
   }
 
   .ant-form-item {
