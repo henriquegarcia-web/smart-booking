@@ -5,15 +5,7 @@ import { toast } from 'react-toastify'
 import { useRegisterAccess, useRegister, useLogin } from '@/hooks/data/useAuth'
 import { verifyToken } from '@/services/auth'
 import { useAllUsersProfile } from '@/hooks/data/useUser'
-
-interface IUser {
-  id: string
-  name?: string
-  email: string
-  blocked: boolean
-  firstAccess: boolean
-  role: string
-}
+import { IUser } from '@/types/globals'
 
 type AdminTheme = 'light' | 'dark'
 
@@ -55,8 +47,12 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { mutateAsync: register } = useRegister()
   const { mutateAsync: login } = useLogin()
 
+  const shouldFetchAllUsers = isUserLogged && user?.role === 'admin'
+
   const { data: usersProfilesData, isSuccess: isUsersProfilesSuccess } =
-    useAllUsersProfile()
+    useAllUsersProfile({
+      enabled: shouldFetchAllUsers
+    })
 
   const handleLogin = async (credentials: {
     email: string
@@ -65,7 +61,6 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const response = await login(credentials)
       const { token } = response
-      // console.log(token)
       const decodedToken: any = jwtDecode(token)
       setTokenExpiration(decodedToken.exp * 1000)
 
@@ -96,7 +91,6 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const response = await register(userData)
       const { token } = response
-      // console.log(token)
       const decodedToken: any = jwtDecode(token)
       setTokenExpiration(decodedToken.exp * 1000)
 
@@ -178,10 +172,12 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   useEffect(() => {
-    if (isUsersProfilesSuccess && usersProfilesData) {
+    if (shouldFetchAllUsers && isUsersProfilesSuccess && usersProfilesData) {
       setAllUsers(usersProfilesData)
+    } else {
+      setAllUsers([])
     }
-  }, [isUsersProfilesSuccess, usersProfilesData])
+  }, [shouldFetchAllUsers, isUsersProfilesSuccess, usersProfilesData])
 
   useEffect(() => {
     checkTokenValidity()
@@ -196,7 +192,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, 5 * 60 * 1000)
 
     return () => clearInterval(interval)
-  }, [token, tokenExpiration, allUsers])
+  }, [token, tokenExpiration])
 
   const AuthContextData: IAuthContextData = useMemo(() => {
     return {

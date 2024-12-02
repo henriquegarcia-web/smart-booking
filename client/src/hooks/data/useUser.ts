@@ -1,17 +1,24 @@
-import { useQuery } from '@tanstack/react-query'
+import { QueryKey, useQuery, UseQueryOptions } from '@tanstack/react-query'
 import { fetchUserProfile, fetchUsersProfiles } from '@/services/user'
+import { IUser } from '@/types/globals'
 
-const useUserProfile = () => {
-  return useQuery({
+const useUserProfile = (
+  options?: Partial<UseQueryOptions<IUser, Error, IUser, QueryKey>>
+) => {
+  return useQuery<IUser, Error, IUser, QueryKey>({
     queryKey: ['userProfile'],
-    queryFn: fetchUserProfile
+    queryFn: fetchUserProfile,
+    ...options
   })
 }
 
-const useAllUsersProfile = () => {
-  return useQuery({
+const useAllUsersProfile = (
+  options?: Partial<UseQueryOptions<IUser[], Error, IUser[], QueryKey>>
+) => {
+  return useQuery<IUser[], Error, IUser[], QueryKey>({
     queryKey: ['usersProfiles'],
-    queryFn: fetchUsersProfiles
+    queryFn: fetchUsersProfiles,
+    ...options
   })
 }
 

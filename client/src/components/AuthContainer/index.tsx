@@ -13,7 +13,12 @@ const AuthContainer = ({ type, children }: IAuthContainer) => {
   const { token } = theme.useToken()
 
   return (
-    <S.AuthContainer style={{ backgroundColor: token.colorBgContainer }}>
+    <S.AuthContainer
+      style={{
+        border: `1px solid ${token.colorBorder}`,
+        backgroundColor: token.colorBgContainer
+      }}
+    >
       <S.AuthHeader>
         <h2 style={{ color: token.colorTextHeading }}>
           {type === 'signin' ? 'Entrar' : 'Criar Conta'}
