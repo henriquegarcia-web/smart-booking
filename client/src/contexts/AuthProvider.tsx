@@ -4,8 +4,14 @@ import { toast } from 'react-toastify'
 
 import { useRegisterAccess, useRegister, useLogin } from '@/hooks/data/useAuth'
 import { verifyToken } from '@/services/auth'
-import { useAllUsersProfile } from '@/hooks/data/useUser'
+import {
+  useAllUsersProfile,
+  useDeleteUser,
+  useToggleUserBlock
+} from '@/hooks/data/useUser'
 import { IUser } from '@/types/globals'
+// import { queryClient } from '@/lib/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 
 type AdminTheme = 'light' | 'dark'
 
@@ -14,6 +20,7 @@ export interface IAuthContextData {
   user: IUser | null
   adminTheme: AdminTheme
   allUsers: IUser[]
+  isUserOperationsLoading: boolean
   handleLogin: (credentials: {
     email: string
     password: string
@@ -28,6 +35,8 @@ export interface IAuthContextData {
     role: string
   }) => Promise<boolean>
   handleLogout: () => void
+  handleDeleteUser: (userId: string) => Promise<void>
+  handleToggleUserBlock: (userId: string, blockStatus: boolean) => Promise<void>
 }
 
 export const AuthContext = createContext<IAuthContextData>(
@@ -35,11 +44,15 @@ export const AuthContext = createContext<IAuthContextData>(
 )
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const queryClient = useQueryClient()
+
   const [isUserLogged, setIsUserLogged] = useState<boolean>(false)
   const [token, setToken] = useState<string | null>(null)
   const [user, setUser] = useState<IUser | null>(null)
-  const [allUsers, setAllUsers] = useState<IUser[]>([])
   const [tokenExpiration, setTokenExpiration] = useState<number | null>(null)
+
+  const [isUserOperationsLoading, setIsUserOperationsLoading] =
+    useState<boolean>(false)
 
   const adminTheme: AdminTheme = 'light'
 
@@ -47,9 +60,12 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { mutateAsync: register } = useRegister()
   const { mutateAsync: login } = useLogin()
 
+  const { mutateAsync: deleteUserMutation } = useDeleteUser()
+  const { mutateAsync: toggleUserBlockMutation } = useToggleUserBlock()
+
   const shouldFetchAllUsers = isUserLogged && user?.role === 'admin'
 
-  const { data: usersProfilesData, isSuccess: isUsersProfilesSuccess } =
+  const { data: allUsers = [], isLoading: isAllUsersLoading } =
     useAllUsersProfile({
       enabled: shouldFetchAllUsers
     })
@@ -119,12 +135,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }) => {
     try {
       await registerAccess(userData)
-      setIsUserLogged(true)
-
-      toast('Sucesso! Seja bem-vindo')
+      queryClient.invalidateQueries({ queryKey: ['usersProfiles'] })
+      toast('Sucesso! Novo acesso registrado')
       return true
     } catch (error: any) {
-      console.error('Falha ao realizar cadastro', error)
+      console.error('Falha ao registrar novo acesso', error)
       toast(error.message)
       return false
     }
@@ -171,13 +186,47 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
-  useEffect(() => {
-    if (shouldFetchAllUsers && isUsersProfilesSuccess && usersProfilesData) {
-      setAllUsers(usersProfilesData)
-    } else {
-      setAllUsers([])
+  const handleDeleteUser = async (userId: string) => {
+    if (userId === user.id) {
+      toast('Você não pode deletar sua própria conta')
+      return
     }
-  }, [shouldFetchAllUsers, isUsersProfilesSuccess, usersProfilesData])
+
+    try {
+      setIsUserOperationsLoading(true)
+      await deleteUserMutation(userId)
+      queryClient.invalidateQueries({ queryKey: ['usersProfiles'] })
+      toast('Usuário deletado com sucesso')
+    } catch (error: any) {
+      console.error('Falha ao deletar usuário', error)
+      toast(error.message || 'Erro ao deletar usuário')
+    } finally {
+      setIsUserOperationsLoading(false)
+    }
+  }
+
+  const handleToggleUserBlock = async (
+    userId: string,
+    blockStatus: boolean
+  ) => {
+    if (userId === user.id) {
+      toast('Você não pode alterar o status de bloqueio da sua própria conta')
+      return
+    }
+
+    try {
+      setIsUserOperationsLoading(true)
+      await toggleUserBlockMutation({ userId, blockStatus })
+      queryClient.invalidateQueries({ queryKey: ['usersProfiles'] })
+      const action = blockStatus ? 'bloqueado' : 'desbloqueado'
+      toast(`Usuário ${action} com sucesso`)
+    } catch (error: any) {
+      console.error('Falha ao alterar status de bloqueio do usuário', error)
+      toast(error.message || 'Erro ao alterar status de bloqueio do usuário')
+    } finally {
+      setIsUserOperationsLoading(false)
+    }
+  }
 
   useEffect(() => {
     checkTokenValidity()
@@ -200,12 +249,22 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       user,
       adminTheme,
       allUsers,
+      isUserOperationsLoading: isUserOperationsLoading || isAllUsersLoading,
       handleLogin,
       handleRegister,
       handleRegisterAccess,
-      handleLogout
+      handleLogout,
+      handleDeleteUser,
+      handleToggleUserBlock
     }
-  }, [isUserLogged, user, adminTheme, allUsers])
+  }, [
+    isUserLogged,
+    user,
+    adminTheme,
+    allUsers,
+    isUserOperationsLoading,
+    isAllUsersLoading
+  ])
 
   return (
     <AuthContext.Provider value={AuthContextData}>

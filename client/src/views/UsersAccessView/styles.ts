@@ -6,6 +6,14 @@ export const UsersAccessView = styled.div`
   flex-direction: column;
   row-gap: ${Sizes.spacing};
   width: 100%;
+
+  .blocked-row {
+    background-color: rgb(235, 235, 235);
+
+    td {
+      background-color: rgb(235, 235, 235) !important;
+    }
+  }
 `
 
 export const TableActions = styled.div`

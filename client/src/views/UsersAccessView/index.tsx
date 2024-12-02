@@ -25,94 +25,118 @@ interface DataType {
   blocked: boolean
 }
 
-const columns: TableProps<DataType>['columns'] = [
-  {
-    title: 'Nome',
-    dataIndex: 'name',
-    key: 'name',
-    render: (text) => <>{text}</>
-  },
-  {
-    title: 'E-mail',
-    dataIndex: 'email',
-    key: 'email',
-    render: (text) => <>{text}</>
-  },
-
-  {
-    title: 'Permissão',
-    key: 'role',
-    dataIndex: 'role',
-    render: (role) => (
-      <Tag color={role === 'admin' ? 'geekblue' : 'cyan'}>
-        {role === 'admin' ? 'ADMIN' : 'MEMBRO'}
-      </Tag>
-    )
-  },
-  {
-    title: 'Bloqueado?',
-    dataIndex: 'blocked',
-    key: 'blocked',
-    render: (blocked) => <>{blocked ? 'Sim' : 'Não'}</>
-  },
-  {
-    title: 'Opções',
-    key: 'action',
-    render: (_, record) => (
-      <S.TableActions>
-        <Tooltip placement="bottomRight" title="Deletar usuário" arrow={true}>
-          <Popconfirm
-            title="Deletar usuário"
-            description="Tem certeza que deseja deletar esse usuário? Essa ação não poderá ser desfeita."
-            onConfirm={() => console.log('AQUI')}
-            okText="Sim, deletar"
-            cancelText="Cancelar"
-            placement="topRight"
-          >
-            <Button icon={<FiTrash />} />
-          </Popconfirm>
-        </Tooltip>
-        <Tooltip placement="bottomRight" title="Bloquear usuário" arrow={true}>
-          <Popconfirm
-            title="Bloquear usuário"
-            description="Tem certeza que deseja bloquear esse usuário?"
-            onConfirm={() => console.log('AQUI')}
-            okText="Sim, bloquear"
-            cancelText="Cancelar"
-            placement="topRight"
-          >
-            <Button icon={<FiXCircle />} />
-          </Popconfirm>
-        </Tooltip>
-      </S.TableActions>
-    )
-  }
-]
-
 interface IUsersAccessView {}
 
 const UsersAccessView = ({}: IUsersAccessView) => {
   const { token } = theme.useToken()
-  const { allUsers } = useAuth()
+  const {
+    user,
+    allUsers,
+    handleDeleteUser,
+    handleToggleUserBlock,
+    isUserOperationsLoading
+  } = useAuth()
 
   const [createAccessModalOpen, setCreateAccessModalOpen] = useState(false)
 
   const handleOpenCreateAccessModal = () => setCreateAccessModalOpen(true)
   const handleCloseCreateAccessModal = () => setCreateAccessModalOpen(false)
 
-  // useEffect(() => {
-  //   console.log(allUsers)
-  // }, [allUsers])
+  const columns: TableProps<DataType>['columns'] = [
+    {
+      title: 'Nome',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text) => <>{text}</>
+    },
+    {
+      title: 'E-mail',
+      dataIndex: 'email',
+      key: 'email',
+      render: (text) => <>{text}</>
+    },
+
+    {
+      title: 'Permissão',
+      key: 'role',
+      dataIndex: 'role',
+      render: (role) => (
+        <Tag color={role === 'admin' ? 'geekblue' : 'cyan'}>
+          {role === 'admin' ? 'ADMIN' : 'MEMBRO'}
+        </Tag>
+      )
+    },
+    {
+      title: 'Bloqueado?',
+      dataIndex: 'blocked',
+      key: 'blocked',
+      render: (blocked) => <>{blocked ? 'Bloqueado' : 'Não'}</>
+    },
+    {
+      title: 'Opções',
+      key: 'action',
+      render: (_, record) => (
+        <S.TableActions>
+          <Tooltip
+            placement="bottomRight"
+            title="Deletar usuário"
+            arrow={true}
+            open={record.key !== user.id ? undefined : false}
+          >
+            <Popconfirm
+              title="Deletar usuário"
+              description="Tem certeza que deseja deletar esse usuário? Essa ação não poderá ser desfeita."
+              onConfirm={() => handleDeleteUser(record.key)}
+              okButtonProps={{ loading: isUserOperationsLoading }}
+              okText="Sim, deletar"
+              cancelText="Cancelar"
+              placement="topRight"
+              disabled={record.key === user.id}
+            >
+              <Button icon={<FiTrash />} disabled={record.key === user.id} />
+            </Popconfirm>
+          </Tooltip>
+          <Tooltip
+            placement="bottomRight"
+            title="Bloquear usuário"
+            arrow={true}
+            open={record.key !== user.id ? undefined : false}
+          >
+            <Popconfirm
+              title="Bloquear usuário"
+              description={
+                !record.blocked
+                  ? 'Tem certeza que deseja bloquear esse usuário?'
+                  : 'Tem certeza que deseja desbloquear esse usuário?'
+              }
+              onConfirm={() =>
+                handleToggleUserBlock(record.key, !record.blocked)
+              }
+              okButtonProps={{ loading: isUserOperationsLoading }}
+              okText={!record.blocked ? 'Sim, bloquear' : 'Sim, desbloquear'}
+              cancelText="Cancelar"
+              placement="topRight"
+              disabled={record.key === user.id}
+            >
+              <Button icon={<FiXCircle />} disabled={record.key === user.id} />
+            </Popconfirm>
+          </Tooltip>
+        </S.TableActions>
+      )
+    }
+  ]
 
   const formattedUsersList = useMemo(() => {
     if (!allUsers) return []
 
-    return allUsers.map((user) => ({
-      key: user.id,
-      name: user?.name || 'Não autenticado',
-      email: user.email,
-      blocked: user.blocked,
-      role: user.role
+    return allUsers.map((userData) => ({
+      key: userData.id,
+      name: userData?.name
+        ? `${userData.name}${userData?.id === user?.id && ' (Você)'}`
+        : 'Não autenticado',
+      email: userData.email,
+      blocked: userData.blocked,
+      role: userData.role
     }))
   }, [allUsers])
 
@@ -125,7 +149,11 @@ const UsersAccessView = ({}: IUsersAccessView) => {
         >
           <Button onClick={handleOpenCreateAccessModal}>Criar Acesso</Button>
         </ViewHeader>
-        <Table<DataType> columns={columns} dataSource={formattedUsersList} />
+        <Table<DataType>
+          columns={columns}
+          dataSource={formattedUsersList}
+          rowClassName={(record) => (record.blocked ? 'blocked-row' : '')}
+        />
       </S.UsersAccessView>
 
       <Modal
