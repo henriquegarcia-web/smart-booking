@@ -7,7 +7,8 @@ import {
   theme,
   ConfigProvider,
   Typography,
-  Tooltip
+  Tooltip,
+  Select
 } from 'antd'
 const { RangePicker } = DatePicker
 import locale from 'antd/locale/pt_BR'
@@ -18,6 +19,7 @@ dayjs.locale('pt-br')
 import * as Yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
+import { discountRateData, pensionSchemeData } from '@/data/admin'
 
 const ApartmentSchema = Yup.object().shape({
   adultCount: Yup.number()
@@ -48,9 +50,14 @@ const SearchAccommodationsSchema = Yup.object().shape({
     )
     .required('As datas de entrada e saída são obrigatórias')
     .defined(),
+  boardPlan: Yup.string()
+    .required('O regime de pensão é obrigatório')
+    .defined(),
+  discountRate: Yup.number(),
   apartments: Yup.array()
     .of(ApartmentSchema)
     .min(1, 'Selecione pelo menos um apartamento')
+    .defined()
 })
 
 type IApartment = Yup.InferType<typeof ApartmentSchema>
@@ -58,6 +65,8 @@ type ISearchForm = Yup.InferType<typeof SearchAccommodationsSchema>
 
 const SearchFormDefaultValues: ISearchForm = {
   checkInOutDate: [null, null],
+  boardPlan: '',
+  discountRate: 0,
   apartments: [
     {
       adultCount: 1,
@@ -97,12 +106,25 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
     console.log(data)
   }
 
+  const formattedPensionScheme = pensionSchemeData.map((role) => ({
+    value: role.schemeId,
+    label: role.schemeLabel
+  }))
+
+  const formattedDiscountRates = Array.from(
+    { length: discountRateData },
+    (_, index) => ({
+      value: index + 1,
+      label: `${index + 1}%`
+    })
+  )
+
   return (
     <S.SearchAccommodationForm
       layout="vertical"
       onFinish={handleSubmit(onSubmit)}
     >
-      <S.FormWrapper>
+      <S.MainFormWrapper>
         <Controller
           name="checkInOutDate"
           control={control}
@@ -137,9 +159,51 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
             </Form.Item>
           )}
         />
-      </S.FormWrapper>
+        <Controller
+          name="boardPlan"
+          control={control}
+          render={({ field }) => (
+            <Form.Item
+              name="boardPlan"
+              label="Regime de pensão"
+              validateStatus={!!errors.boardPlan ? 'error' : ''}
+              help={errors?.boardPlan?.message || null}
+            >
+              <Select
+                {...field}
+                placeholder="Selecione uma opção"
+                onChange={(value) => {
+                  field.onChange(value)
+                }}
+                options={formattedPensionScheme}
+              />
+            </Form.Item>
+          )}
+        />
+        <Controller
+          name="discountRate"
+          control={control}
+          render={({ field }) => (
+            <Form.Item
+              name="discountRate"
+              label="Desconto (Opcional)"
+              validateStatus={!!errors.discountRate ? 'error' : ''}
+              help={errors?.discountRate?.message || null}
+            >
+              <Select
+                {...field}
+                placeholder="Selecione uma opção"
+                onChange={(value) => {
+                  field.onChange(value)
+                }}
+                options={formattedDiscountRates}
+              />
+            </Form.Item>
+          )}
+        />
+      </S.MainFormWrapper>
 
-      <S.FormWrapper>
+      <S.ApartmentsFormWrapper>
         {apartments.length < 10 && (
           <Button
             style={{ width: 'fit-content' }}
@@ -231,7 +295,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
             </S.ApartmentSectionWrapper>
           </S.ApartmentSection>
         ))}
-      </S.FormWrapper>
+      </S.ApartmentsFormWrapper>
 
       <S.SearchAccommodationFormFooter>
         <Button onClick={handleResetForm}>Limpar</Button>

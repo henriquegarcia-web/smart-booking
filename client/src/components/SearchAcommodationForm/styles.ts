@@ -9,8 +9,8 @@ export const SearchAccommodationForm = styled(Form)`
   padding: 10px 0;
 
   .ant-picker-range {
-    width: 50%;
-    min-width: 280px;
+    width: 100%;
+    min-width: 340px;
   }
 
   .ant-form-item {
@@ -26,7 +26,13 @@ export const SearchAccommodationForm = styled(Form)`
   }
 `
 
-export const FormWrapper = styled.div`
+export const MainFormWrapper = styled.div`
+  display: flex;
+  width: 100%;
+  column-gap: 10px;
+`
+
+export const ApartmentsFormWrapper = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;

@@ -4,7 +4,7 @@ import { Button, Form, Input, Select, theme } from 'antd'
 import * as Yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm, Controller } from 'react-hook-form'
-import { rolesData } from '@/data/roles'
+import { rolesData } from '@/data/admin'
 import { useAuth } from '@/contexts/AuthProvider'
 
 const createUserAccessSchema = Yup.object().shape({
