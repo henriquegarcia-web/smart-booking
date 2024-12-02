@@ -25,10 +25,13 @@
     "json-server": "^0.17.4",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.1",
+    "node-cache": "^5.1.2",
     "nodemon": "^3.1.0",
     "pg": "^8.13.1",
     "puppeteer": "^23.9.0",
-    "sequelize": "^6.37.5"
+    "query-string": "^9.1.1",
+    "sequelize": "^6.37.5",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "jest": "^29.7.0",
