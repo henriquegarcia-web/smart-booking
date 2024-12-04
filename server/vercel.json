@@ -11,5 +11,16 @@
       "src": "/(.*)",
       "dest": "src/index.js"
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://vmtcot-server.vercel.app/api/$1",
+      "headers": {
+        "Access-Control-Allow-Origin": "https://vmcot-client.vercel.app",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE",
+        "Access-Control-Allow-Credentials": true
+      }
+    }
   ]
 }
