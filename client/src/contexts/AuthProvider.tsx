@@ -69,8 +69,8 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { mutateAsync: register } = useRegister()
   const { mutateAsync: login } = useLogin()
 
-  const userData = useUserProfile(user ? user.id : '')
-  const usersData = useAllUsersProfile()
+  const userData = useUserProfile(user?.id)
+  const usersData = useAllUsersProfile(user?.id)
 
   const { mutateAsync: deleteUser } = useDeleteUser()
   const { mutateAsync: toggleUserBlock } = useToggleUserBlock()

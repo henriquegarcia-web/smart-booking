@@ -18,13 +18,14 @@ const useUserProfile = (userId: string) => {
   })
 }
 
-const useAllUsersProfile = () => {
+const useAllUsersProfile = (userId: string) => {
   return useQuery<IUser[]>({
     queryKey: ['usersProfiles'],
     queryFn: async () => {
       const users = await fetchUsersProfiles()
       return users
-    }
+    },
+    enabled: !!userId
     // staleTime: 1000 * 60 * 5
   })
 }
