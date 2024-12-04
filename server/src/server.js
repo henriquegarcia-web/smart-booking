@@ -77,25 +77,25 @@ app.use((req, res, next) => {
 // Definição de rotas
 app.use('/api', routes)
 
-app.use((req, res, next) => {
-  res.setTimeout(10000, () => {
-    // Timeout de 10 segundos
-    res.status(408).json({ error: 'Request timeout' })
-  })
-  next()
-})
+// app.use((req, res, next) => {
+//   res.setTimeout(10000, () => {
+//     // Timeout de 10 segundos
+//     res.status(408).json({ error: 'Request timeout' })
+//   })
+//   next()
+// })
 
 app.get('/test', (req, res) => {
   res.json({ message: 'Teste bem-sucedido! O servidor está funcionando.' })
 })
 
-app.use((err, req, res, next) => {
-  if (err) {
-    console.error('Erro detectado:', err.message)
-    res.status(500).json({ error: 'Erro no servidor ou bloqueio do CORS.' })
-  } else {
-    next()
-  }
-})
+// app.use((err, req, res, next) => {
+//   if (err) {
+//     console.error('Erro detectado:', err.message)
+//     res.status(500).json({ error: 'Erro no servidor ou bloqueio do CORS.' })
+//   } else {
+//     next()
+//   }
+// })
 
 export default app
