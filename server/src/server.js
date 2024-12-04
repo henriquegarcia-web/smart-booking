@@ -59,20 +59,20 @@ app.use(cors(corsOptions))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*') // Permita todas as origens (ou configure especificamente)
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
-  )
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+// app.use((req, res, next) => {
+//   // res.header('Access-Control-Allow-Origin', '*') // Permita todas as origens (ou configure especificamente)
+//   res.header(
+//     'Access-Control-Allow-Headers',
+//     'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+//   )
+//   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
 
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(204) // Responda rapidamente para requisições preflight
-  } else {
-    next()
-  }
-})
+//   if (req.method === 'OPTIONS') {
+//     res.sendStatus(204) // Responda rapidamente para requisições preflight
+//   } else {
+//     next()
+//   }
+// })
 
 // Definição de rotas
 app.use('/api', routes)
