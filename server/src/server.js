@@ -1,10 +1,7 @@
 import express from 'express'
 import bodyParser from 'body-parser'
 import cors from 'cors'
-import { connectDatabase } from './config/database.js'
 import routes from './routes/index.js'
-
-const PORT = process.env.PORT || 5000
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -41,13 +38,3 @@ app.get('/test', (req, res) => {
 })
 
 export default app
-
-// connectDatabase()
-//   .then(() => {
-//     app.listen(PORT, () => {
-//       console.log(`Servidor ativo, porta: ${PORT}`)
-//     })
-//   })
-//   .catch((err) => {
-//     console.error('Falha ao tentar se conectar a database', err)
-//   })
