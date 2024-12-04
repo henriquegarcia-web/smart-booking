@@ -3,7 +3,7 @@ import * as S from './styles'
 
 import { SearchAcommodationForm, ViewHeader } from '@/components'
 import { formatTextToCurrency } from '@/utils/functions/formatCurrency'
-import { Button, Collapse, Space, Table, Tag, theme } from 'antd'
+import { Button, Collapse, Table, theme } from 'antd'
 import type { CollapseProps, TableProps } from 'antd'
 import { useMemo } from 'react'
 
@@ -58,13 +58,14 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
   const { filterResults } = useFilter()
 
   const formattedUsersList: IFilterData[] = useMemo(() => {
+    console.log(filterResults)
     if (!filterResults?.data?.filterResults) return []
 
-    return filterResults.data.filterResults.map((accommodation) => ({
-      key: accommodation.accommodationName,
-      accommodationName: accommodation.accommodationName,
-      accommodationPrice: accommodation.accommodationPrice,
-      accommodationMeal: accommodation.accommodationMeal
+    return filterResults.data.filterResults.map((accommodation, index) => ({
+      key: `${accommodation.accommodationName}-${accommodation.accommodationPrice}-${accommodation.accommodationMeal}-${index}`,
+      accommodationName: accommodation?.accommodationName || '',
+      accommodationPrice: accommodation?.accommodationPrice || '',
+      accommodationMeal: accommodation?.accommodationMeal || ''
     }))
   }, [filterResults])
 
@@ -82,7 +83,7 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
         </Button>
       </ViewHeader>
 
-      <Collapse items={items} defaultActiveKey={['1']} />
+      <Collapse items={items} />
 
       <Table<IFilterData>
         columns={columns}

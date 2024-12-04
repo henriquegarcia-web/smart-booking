@@ -117,7 +117,8 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
   })
   const { errors, isSubmitting, isValid } = formState
   const checkInOutDate = watch('checkInOutDate')
-  const isFormValid = isValid && checkInOutDate[0] && checkInOutDate[1]
+  const isFormValid =
+    isValid && checkInOutDate && checkInOutDate[0] && checkInOutDate[1]
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -180,6 +181,42 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
       onFinish={handleSubmit(onSubmit)}
     >
       <S.MainFormWrapper>
+        {/* <Controller
+          name="checkInOutDate"
+          control={control}
+          render={({ field }) => (
+            <Form.Item
+              name="checkInOutDate"
+              label="Entrada e Saída"
+              validateStatus={errors.checkInOutDate ? 'error' : ''}
+              help={errors?.checkInOutDate?.message}
+            >
+              <ConfigProvider locale={locale}>
+                <RangePicker
+                  {...field}
+                  format="DD/MM/YYYY"
+                  placeholder={['Data de entrada', 'Data de saída']}
+                  value={
+                    field.value && field.value.length === 2
+                      ? (field.value.map((date) =>
+                          date ? dayjs(date) : null
+                        ) as [Dayjs | null, Dayjs | null])
+                      : [null, null]
+                  }
+                  onChange={(dates) => {
+                    field.onChange(
+                      dates?.map((date) => date?.toDate() || null) || [
+                        null,
+                        null
+                      ]
+                    )
+                  }}
+                  disabled={filterResults?.isLoading || false}
+                />
+              </ConfigProvider>
+            </Form.Item>
+          )}
+        /> */}
         <Controller
           name="checkInOutDate"
           control={control}

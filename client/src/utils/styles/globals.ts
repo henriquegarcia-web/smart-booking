@@ -10,7 +10,7 @@ export const Sizes = {
     header: '60px',
     menu: '63px',
     menuOpened: '240px',
-    viewMax: '1280px'
+    viewMax: '1100px'
   },
   spacing: '15px'
 }

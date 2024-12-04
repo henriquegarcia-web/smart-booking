@@ -236,24 +236,33 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
       )
 
       for (const meal of mealPathData) {
-        console.log(
-          '==============> ',
-          meal.service,
-          meal.service !== 'Café da Manhã'
-        )
-
-        if (mealType === 'only_breakfast' && meal.service !== 'Café da Manhã') {
+        if (mealType === 'only_breakfast' && meal.service === 'Café da Manhã') {
+          console.log(
+            'only_breakfast ==============> ',
+            meal.service,
+            mealType === 'only_breakfast' && meal.service === 'Café da Manhã'
+          )
           continue
         }
         if (
           mealType === 'half_meal' &&
-          !['Café da Manhã e Jantar', 'Café da Manhã e Almoço'].includes(
+          ['Café da Manhã e Jantar', 'Café da Manhã e Almoço'].includes(
             meal.service
           )
         ) {
+          console.log(
+            'half_meal ==============> ',
+            meal.service,
+            mealType === 'half_meal' && meal.service === 'Café da Manhã'
+          )
           continue
         }
-        if (mealType === 'full_meal' && meal.service !== 'Pensão Completa') {
+        if (mealType === 'full_meal' && meal.service === 'Pensão Completa') {
+          console.log(
+            'full_meal ==============> ',
+            meal.service,
+            mealType === 'full_meal' && meal.service === 'Café da Manhã'
+          )
           continue
         }
 

@@ -81,6 +81,7 @@ export const DashboardView = styled.div`
   width: 100%;
   height: calc(100% - ${Sizes.dashboard.header});
   padding: 20px;
+  overflow: auto;
 `
 
 export const DashboardViewWrapper = styled.div`
