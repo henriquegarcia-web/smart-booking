@@ -15,12 +15,26 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://vmtcot-server.vercel.app/api/$1",
-      "headers": {
-        "Access-Control-Allow-Origin": "https://vmcot-client.vercel.app",
-        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE",
-        "Access-Control-Allow-Credentials": true
-      }
+      "destination": "https://vmtcot-server.vercel.app/api/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://vmcot-client.vercel.app"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        }
+      ]
     }
   ]
 }
