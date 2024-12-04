@@ -74,9 +74,9 @@ export const AgesInputWrapper = styled.div`
 
   h3 {
     margin-bottom: 4px;
-    font-size: 14px;
-    line-height: 14px;
-    font-weight: 500;
+    font-size: 13px;
+    line-height: 13px;
+    font-weight: 400;
   }
 `
 

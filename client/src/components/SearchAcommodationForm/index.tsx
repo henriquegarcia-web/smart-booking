@@ -42,16 +42,16 @@ const ApartmentSchema = Yup.object().shape({
       .min(0, 'A idade da criança não pode ser negativa')
       .max(17, 'A idade máxima para criança é 17 anos')
       .required('A idade da criança é obrigatória')
-  ),
-  seniorCount: Yup.number()
-    .min(0, 'A quantidade de idosos não pode ser negativa')
-    .required('A quantidade de idosos é obrigatória')
-    .defined(),
-  seniorAges: Yup.array().of(
-    Yup.number()
-      .min(60, 'A idade mínima para idoso é 60 anos')
-      .required('A idade do idoso é obrigatória')
   )
+  // seniorCount: Yup.number()
+  //   .min(0, 'A quantidade de idosos não pode ser negativa')
+  //   .required('A quantidade de idosos é obrigatória')
+  //   .defined(),
+  // seniorAges: Yup.array().of(
+  //   Yup.number()
+  //     .min(60, 'A idade mínima para idoso é 60 anos')
+  //     .required('A idade do idoso é obrigatória')
+  // )
 })
 
 const SearchAccommodationsSchema = Yup.object().shape({
@@ -88,9 +88,9 @@ const SearchFormDefaultValues: ISearchForm = {
     {
       adultCount: 1,
       childCount: 0,
-      seniorCount: 0,
-      childrenAges: [],
-      seniorAges: []
+      // seniorCount: 0,
+      childrenAges: []
+      // seniorAges: []
     }
   ]
 }
@@ -112,8 +112,8 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
   } = useForm<ISearchForm>({
     mode: 'all',
     resolver: yupResolver(SearchAccommodationsSchema),
-    defaultValues: SearchFormDefaultValues,
-    disabled: filterResults?.isLoading || false
+    defaultValues: SearchFormDefaultValues
+    // disabled: filterResults?.isLoading
   })
   const { errors, isSubmitting, isValid } = formState
   const checkInOutDate = watch('checkInOutDate')
@@ -133,7 +133,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
 
   const onSubmit = async (data: ISearchForm) => {
     const formattedData = formatBookingData(data)
-    await handleFilter(formattedData)
+    const response = await handleFilter(formattedData)
   }
 
   const formattedPensionScheme = pensionSchemeData.map((role) => ({
@@ -149,9 +149,9 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
     })
   )
 
-  const getFormattedCountOptions = (label: string) => {
+  const getFormattedCountOptions = (label: string, length: number) => {
     const formattedCountOptions = Array.from(
-      { length: filterCountsLimit },
+      { length: length },
       (_, index) => ({
         value: index + 1,
         label: `${index + 1} ${label}${index + 1 > 1 ? 's' : ''}`
@@ -160,9 +160,9 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
     return formattedCountOptions
   }
 
-  const getFormattedCountFullOptions = (label: string) => {
+  const getFormattedCountFullOptions = (label: string, length: number) => {
     const formattedCountFullOptions = Array.from(
-      { length: filterCountsLimit },
+      { length: length },
       (_, index) => ({
         value: index,
         label: `${index} ${label}${index === 1 ? '' : 's'}`
@@ -181,42 +181,6 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
       onFinish={handleSubmit(onSubmit)}
     >
       <S.MainFormWrapper>
-        {/* <Controller
-          name="checkInOutDate"
-          control={control}
-          render={({ field }) => (
-            <Form.Item
-              name="checkInOutDate"
-              label="Entrada e Saída"
-              validateStatus={errors.checkInOutDate ? 'error' : ''}
-              help={errors?.checkInOutDate?.message}
-            >
-              <ConfigProvider locale={locale}>
-                <RangePicker
-                  {...field}
-                  format="DD/MM/YYYY"
-                  placeholder={['Data de entrada', 'Data de saída']}
-                  value={
-                    field.value && field.value.length === 2
-                      ? (field.value.map((date) =>
-                          date ? dayjs(date) : null
-                        ) as [Dayjs | null, Dayjs | null])
-                      : [null, null]
-                  }
-                  onChange={(dates) => {
-                    field.onChange(
-                      dates?.map((date) => date?.toDate() || null) || [
-                        null,
-                        null
-                      ]
-                    )
-                  }}
-                  disabled={filterResults?.isLoading || false}
-                />
-              </ConfigProvider>
-            </Form.Item>
-          )}
-        /> */}
         <Controller
           name="checkInOutDate"
           control={control}
@@ -297,202 +261,160 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
           <Button
             disabled={filterResults?.isLoading || false}
             style={{ width: 'fit-content' }}
-            onClick={() =>
-              append({ adultCount: 1, childCount: 0, seniorCount: 0 })
-            }
+            onClick={() => append({ adultCount: 1, childCount: 0 })}
           >
             Adicionar Apartamento
           </Button>
         )}
 
-        {fields.map((field, index) => (
-          <S.ApartmentSection
-            key={field.id}
-            style={{ border: `1px solid ${token.colorBorder}` }}
-          >
-            <S.ApartmentSectionHeader>
-              <h2>Apartamento {index + 1}</h2>
+        {fields.map((field, index) => {
+          const childsInputCount = watch(`apartments.${index}.childCount`)
 
-              {index > 0 && (
-                <Tooltip
-                  placement="topRight"
-                  title={`Remover apartamento ${index + 1}`}
-                  arrow={true}
-                >
-                  <Button
-                    disabled={filterResults?.isLoading || false}
-                    onClick={() => remove(index)}
+          return (
+            <S.ApartmentSection
+              key={field.id}
+              style={{ border: `1px solid ${token.colorBorder}` }}
+            >
+              <S.ApartmentSectionHeader>
+                <h2>Apartamento {index + 1}</h2>
+
+                {index > 0 && (
+                  <Tooltip
+                    placement="topRight"
+                    title={`Remover apartamento ${index + 1}`}
+                    arrow={true}
                   >
-                    Remover
-                  </Button>
-                </Tooltip>
-              )}
-            </S.ApartmentSectionHeader>
-            <S.ApartmentSectionWrapper>
-              <Controller
-                name={`apartments.${index}.adultCount`}
-                control={control}
-                render={({ field }) => (
-                  <Form.Item
-                    validateStatus={
-                      errors.apartments?.[index]?.adultCount ? 'error' : ''
-                    }
-                    help={errors.apartments?.[index]?.adultCount?.message}
-                  >
-                    <Select
-                      {...field}
-                      placeholder="Selecione uma opção"
-                      onChange={(value) => {
-                        field.onChange(value)
-                      }}
-                      options={getFormattedCountOptions('adulto')}
+                    <Button
                       disabled={filterResults?.isLoading || false}
-                    />
-                  </Form.Item>
+                      onClick={() => remove(index)}
+                    >
+                      Remover
+                    </Button>
+                  </Tooltip>
                 )}
-              />
-              <Controller
-                name={`apartments.${index}.childCount`}
-                control={control}
-                render={({ field }) => (
-                  <Form.Item
-                    validateStatus={
-                      errors.apartments?.[index]?.childCount ? 'error' : ''
-                    }
-                    help={errors.apartments?.[index]?.childCount?.message}
-                  >
-                    <Select
-                      {...field}
-                      placeholder="Selecione uma opção"
-                      onChange={(value) => {
-                        field.onChange(value)
-                      }}
-                      options={getFormattedCountFullOptions('criança')}
-                      disabled={filterResults?.isLoading || false}
-                    />
-                  </Form.Item>
-                )}
-              />
-              <Controller
-                name={`apartments.${index}.seniorCount`}
-                control={control}
-                render={({ field }) => (
-                  <Form.Item
-                    validateStatus={
-                      errors.apartments?.[index]?.seniorCount ? 'error' : ''
-                    }
-                    help={errors.apartments?.[index]?.seniorCount?.message}
-                  >
-                    <Select
-                      {...field}
-                      placeholder="Selecione uma opção"
-                      onChange={(value) => {
-                        field.onChange(value)
-                      }}
-                      options={getFormattedCountFullOptions('idoso')}
-                      disabled={filterResults?.isLoading || false}
-                    />
-                  </Form.Item>
-                )}
-              />
-            </S.ApartmentSectionWrapper>
-            <S.ApartmentSectionWrapper>
-              <S.AgesInputWrapper />
-              {watch(`apartments.${index}.childCount`) > 0 ? (
+              </S.ApartmentSectionHeader>
+              <S.ApartmentSectionWrapper>
                 <S.AgesInputWrapper>
-                  <h3>Idades das crianças</h3>
-                  {Array.from({
-                    length: watch(`apartments.${index}.childCount`)
-                  }).map((_, childIndex) => (
-                    <Controller
-                      key={childIndex}
-                      name={`apartments.${index}.childrenAges.${childIndex}`}
-                      control={control}
-                      defaultValue={0}
-                      render={({ field }) => (
-                        <Form.Item
-                          validateStatus={
-                            errors.apartments?.[index]?.childrenAges?.[
-                              childIndex
-                            ]
-                              ? 'error'
-                              : ''
-                          }
-                          help={
-                            errors.apartments?.[index]?.childrenAges?.[
-                              childIndex
-                            ]?.message
-                          }
-                        >
-                          <InputNumber
-                            {...field}
-                            addonBefore={`Criança ${childIndex + 1}`}
-                            min={0}
-                            max={13}
-                            placeholder="Idade"
-                            disabled={filterResults?.isLoading || false}
-                          />
-                        </Form.Item>
-                      )}
-                    />
-                  ))}
+                  <h3>Qtd. de adultos</h3>
+
+                  <Controller
+                    name={`apartments.${index}.adultCount`}
+                    control={control}
+                    render={({ field }) => (
+                      <Form.Item
+                        validateStatus={
+                          errors.apartments?.[index]?.adultCount ? 'error' : ''
+                        }
+                        help={errors.apartments?.[index]?.adultCount?.message}
+                      >
+                        <Select
+                          {...field}
+                          placeholder="Selecione uma opção"
+                          onChange={(value) => {
+                            field.onChange(value)
+                          }}
+                          options={getFormattedCountOptions('adulto', 8)}
+                          disabled={filterResults?.isLoading || false}
+                        />
+                      </Form.Item>
+                    )}
+                  />
                 </S.AgesInputWrapper>
-              ) : (
-                <S.AgesInputWrapper />
-              )}
-              {watch(`apartments.${index}.seniorCount`) > 0 ? (
                 <S.AgesInputWrapper>
-                  <h3>Idades dos idosos</h3>
-                  {Array.from({
-                    length: watch(`apartments.${index}.seniorCount`)
-                  }).map((_, seniorIndex) => (
-                    <Controller
-                      key={seniorIndex}
-                      name={`apartments.${index}.seniorAges.${seniorIndex}`}
-                      control={control}
-                      defaultValue={60}
-                      render={({ field }) => (
-                        <Form.Item
-                          validateStatus={
-                            errors.apartments?.[index]?.seniorAges?.[
-                              seniorIndex
-                            ]
-                              ? 'error'
-                              : ''
-                          }
-                          help={
-                            errors.apartments?.[index]?.seniorAges?.[
-                              seniorIndex
-                            ]?.message
-                          }
-                        >
-                          <InputNumber
-                            {...field}
-                            addonBefore={`Idoso ${seniorIndex + 1}`}
-                            min={60}
-                            placeholder="Idade"
-                            disabled={filterResults?.isLoading || false}
-                          />
-                        </Form.Item>
-                      )}
-                    />
-                  ))}
+                  <h3>Qtd. de crianças</h3>
+
+                  <Controller
+                    name={`apartments.${index}.childCount`}
+                    control={control}
+                    render={({ field }) => (
+                      <Form.Item
+                        validateStatus={
+                          errors.apartments?.[index]?.childCount ? 'error' : ''
+                        }
+                        help={errors.apartments?.[index]?.childCount?.message}
+                      >
+                        <Select
+                          {...field}
+                          placeholder="Selecione uma opção"
+                          onChange={(value) => {
+                            field.onChange(value)
+                          }}
+                          options={getFormattedCountFullOptions('criança', 9)}
+                          disabled={filterResults?.isLoading || false}
+                        />
+                      </Form.Item>
+                    )}
+                  />
                 </S.AgesInputWrapper>
-              ) : (
-                <S.AgesInputWrapper />
-              )}
-            </S.ApartmentSectionWrapper>
-          </S.ApartmentSection>
-        ))}
+
+                {childsInputCount > 0 ? (
+                  <S.AgesInputWrapper>
+                    <h3>
+                      {childsInputCount > 1 ? (
+                        <>Idades das {childsInputCount} crianças</>
+                      ) : (
+                        <>Idade da criança</>
+                      )}
+                    </h3>
+                    {Array.from({
+                      length: childsInputCount
+                    }).map((_, childIndex) => (
+                      <Controller
+                        key={childIndex}
+                        name={`apartments.${index}.childrenAges.${childIndex}`}
+                        control={control}
+                        defaultValue={0}
+                        render={({ field }) => (
+                          <Form.Item
+                            // label={`Criança ${childIndex + 1}`}
+                            validateStatus={
+                              errors.apartments?.[index]?.childrenAges?.[
+                                childIndex
+                              ]
+                                ? 'error'
+                                : ''
+                            }
+                            help={
+                              errors.apartments?.[index]?.childrenAges?.[
+                                childIndex
+                              ]?.message
+                            }
+                          >
+                            <Select
+                              {...field}
+                              placeholder="Selecione uma opção"
+                              onChange={(value) => {
+                                field.onChange(value)
+                              }}
+                              options={getFormattedCountFullOptions('ano', 14)}
+                              disabled={filterResults?.isLoading || false}
+                            />
+                          </Form.Item>
+                        )}
+                      />
+                    ))}
+                  </S.AgesInputWrapper>
+                ) : (
+                  <S.AgesInputWrapper />
+                )}
+              </S.ApartmentSectionWrapper>
+            </S.ApartmentSection>
+          )
+        })}
       </S.ApartmentsFormWrapper>
 
       <S.SearchAccommodationFormFooter>
-        <Button onClick={handleResetForm}>Limpar</Button>
+        <Button
+          disabled={!isFormValid || filterResults?.isLoading}
+          onClick={handleResetForm}
+        >
+          Limpar
+        </Button>
         <Button
           type="primary"
           htmlType="submit"
-          disabled={!isFormValid || filterResults?.isLoading}
-          loading={isSubmitting}
+          disabled={!isFormValid}
+          loading={isSubmitting || filterResults?.isLoading}
         >
           Buscar
         </Button>

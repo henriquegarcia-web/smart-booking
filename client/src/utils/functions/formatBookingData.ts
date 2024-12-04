@@ -24,7 +24,7 @@ const formatBookingData = (bookingData: ISearchForm): IFilterData => {
   )
 
   const childsAges = bookingData.apartments.reduce((ages, apt) => {
-    return ages.concat(apt.childrenAges, apt.seniorAges)
+    return ages.concat(apt.childrenAges)
   }, [])
 
   return {
@@ -34,7 +34,8 @@ const formatBookingData = (bookingData: ISearchForm): IFilterData => {
     adultCount,
     childsAges,
     mealType: bookingData.mealType,
-    unavailable: true
+    unavailable: true,
+    discount: bookingData.discountRate
   }
 }
 

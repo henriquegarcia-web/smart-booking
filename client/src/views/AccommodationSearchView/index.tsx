@@ -2,7 +2,10 @@ import { useFilter } from '@/contexts/FilterProvider'
 import * as S from './styles'
 
 import { SearchAcommodationForm, ViewHeader } from '@/components'
-import { formatTextToCurrency } from '@/utils/functions/formatCurrency'
+import {
+  applyDiscount,
+  formatTextToCurrency
+} from '@/utils/functions/formatCurrency'
 import { Button, Collapse, Table, theme } from 'antd'
 import type { CollapseProps, TableProps } from 'antd'
 import { useMemo } from 'react'
@@ -31,8 +34,7 @@ const columns: TableProps<IFilterData>['columns'] = [
   {
     title: 'Preço',
     dataIndex: 'accommodationPrice',
-    key: 'accommodationPrice',
-    render: (price) => formatTextToCurrency(price)
+    key: 'accommodationPrice'
   },
   {
     title: 'Tipo de Pensão',
@@ -55,19 +57,22 @@ interface IAccommodationSearchView {}
 
 const AccommodationSearchView = ({}: IAccommodationSearchView) => {
   const { token } = theme.useToken()
-  const { filterResults } = useFilter()
+  const { filterData, filterResults } = useFilter()
 
   const formattedUsersList: IFilterData[] = useMemo(() => {
-    console.log(filterResults)
     if (!filterResults?.data?.filterResults) return []
 
     return filterResults.data.filterResults.map((accommodation, index) => ({
       key: `${accommodation.accommodationName}-${accommodation.accommodationPrice}-${accommodation.accommodationMeal}-${index}`,
       accommodationName: accommodation?.accommodationName || '',
-      accommodationPrice: accommodation?.accommodationPrice || '',
+      accommodationPrice:
+        applyDiscount(
+          accommodation?.accommodationPrice || '',
+          filterData.discount || 0
+        ) || '',
       accommodationMeal: accommodation?.accommodationMeal || ''
     }))
-  }, [filterResults])
+  }, [filterData, filterResults])
 
   return (
     <S.AccommodationSearchView>

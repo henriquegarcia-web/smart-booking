@@ -29,11 +29,11 @@ const pensionSchemeData: IPensionScheme[] = [
     schemeLabel: 'Café da Manhã'
   },
   {
-    schemeId: 'half_board',
+    schemeId: 'half_meal',
     schemeLabel: 'Meia Pensão'
   },
   {
-    schemeId: 'full_board',
+    schemeId: 'full_meal',
     schemeLabel: 'Pensão Completa'
   }
 ]

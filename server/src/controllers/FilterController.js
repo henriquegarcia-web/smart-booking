@@ -187,6 +187,69 @@ async function makePriceRequest(
   }
 }
 
+// function compareMealTypeAndService(mealType, mealService) {
+//   switch (mealType) {
+//     case 'only_breakfast':
+//       return mealService === 'Café da Manhã'
+//     case 'half_meal':
+//       return (
+//         mealService === 'Café da Manhã e Jantar' ||
+//         mealService === 'Café da Manhã e Almoço'
+//       )
+//     case 'full_meal':
+//       return mealService === 'Pensão Completa'
+//     default:
+//       return false
+//   }
+// }
+
+function compareMealTypeAndService(mealType, mealService) {
+  const mealServiceLower = mealService.toLowerCase()
+
+  switch (mealType) {
+    case 'only_breakfast':
+      return (
+        mealServiceLower.includes('café') ||
+        mealServiceLower.includes('breakfast')
+      )
+    case 'half_meal':
+      return (
+        (mealServiceLower.includes('café') ||
+          mealServiceLower.includes('breakfast')) &&
+        (mealServiceLower.includes('jantar') ||
+          mealServiceLower.includes('dinner') ||
+          mealServiceLower.includes('almoço') ||
+          mealServiceLower.includes('lunch'))
+      )
+    case 'full_meal':
+      return (
+        mealServiceLower.includes('pensão completa') ||
+        mealServiceLower.includes('full board') ||
+        (mealServiceLower.includes('café') &&
+          mealServiceLower.includes('almoço') &&
+          mealServiceLower.includes('jantar')) ||
+        (mealServiceLower.includes('breakfast') &&
+          mealServiceLower.includes('lunch') &&
+          mealServiceLower.includes('dinner'))
+      )
+    default:
+      return false
+  }
+}
+
+function getMealTypeDescription(mealType) {
+  switch (mealType) {
+    case 'only_breakfast':
+      return 'Café da Manhã'
+    case 'half_meal':
+      return 'Meia Pensão'
+    case 'full_meal':
+      return 'Pensão Completa'
+    default:
+      return 'Tipo de refeição desconhecido'
+  }
+}
+
 export const findAccommodationsOnTravelXs = async (req, res) => {
   const {
     checkInDate,
@@ -194,7 +257,7 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
     days,
     adultCount,
     childsAges,
-    mealType, // 'only_breakfast' | 'half_meal' | 'full_meal'
+    mealType,
     unavailable
   } = req.query
 
@@ -236,62 +299,43 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
       )
 
       for (const meal of mealPathData) {
-        if (mealType === 'only_breakfast' && meal.service === 'Café da Manhã') {
-          console.log(
-            'only_breakfast ==============> ',
-            meal.service,
-            mealType === 'only_breakfast' && meal.service === 'Café da Manhã'
-          )
-          continue
-        }
-        if (
-          mealType === 'half_meal' &&
-          ['Café da Manhã e Jantar', 'Café da Manhã e Almoço'].includes(
-            meal.service
-          )
-        ) {
-          console.log(
-            'half_meal ==============> ',
-            meal.service,
-            mealType === 'half_meal' && meal.service === 'Café da Manhã'
-          )
-          continue
-        }
-        if (mealType === 'full_meal' && meal.service === 'Pensão Completa') {
-          console.log(
-            'full_meal ==============> ',
-            meal.service,
-            mealType === 'full_meal' && meal.service === 'Café da Manhã'
-          )
-          continue
-        }
+        const validation = compareMealTypeAndService(mealType, meal.service)
 
-        const mealPath = `${hotelInfo.hotelPath}|${meal.pathAsString}`
-        const persons = Array(parseInt(adultCount))
-          .fill()
-          .map(() => ({
-            id: 0,
-            name: '',
-            tag: 'Adulto',
-            mailing: false,
-            forSave: true
-          }))
+        if (validation) {
+          const mealPath = `${hotelInfo.hotelPath}|${meal.pathAsString}`
+          const persons = Array(parseInt(adultCount))
+            .fill()
+            .map(() => ({
+              id: 0,
+              name: '',
+              tag: 'Adulto',
+              mailing: false,
+              forSave: true
+            }))
 
-        const priceData = await makePriceRequest(
-          token,
-          'agencies/1996',
-          hotelInfo.servicePath,
-          hotelInfo.servicePathsAsString,
-          mealPath,
-          persons,
-          checkInDate
-        )
+          const priceData = await makePriceRequest(
+            token,
+            'agencies/1996',
+            hotelInfo.servicePath,
+            hotelInfo.servicePathsAsString,
+            mealPath,
+            persons,
+            checkInDate
+          )
 
-        filterResults.push({
-          accommodationName: hotelInfo.hotelName,
-          accommodationPrice: priceData.value,
-          accommodationMeal: meal.service
-        })
+          if (
+            !!priceData &&
+            !!priceData?.value &&
+            priceData?.value !== undefined &&
+            priceData?.value !== null &&
+            priceData?.value !== ''
+          )
+            filterResults.push({
+              accommodationName: hotelInfo.hotelName,
+              accommodationPrice: priceData.value,
+              accommodationMeal: getMealTypeDescription(mealType)
+            })
+        }
       }
     }
 

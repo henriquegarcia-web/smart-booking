@@ -20,6 +20,7 @@ export interface IFilterData {
   childsAges: number[]
   mealType?: string
   unavailable?: boolean
+  discount?: number
 }
 
 export interface IAccommodation {
@@ -36,6 +37,7 @@ export interface IFilterResults {
 }
 
 interface IFilterContextData {
+  filterData: IFilterData
   filterResults: {
     data: IFilterResults | undefined
     isLoading: boolean
@@ -79,6 +81,7 @@ const FilterProvider = ({ children }: { children: React.ReactNode }) => {
 
   const FilterContextData = useMemo(
     () => ({
+      filterData,
       filterResults: {
         data: filterResults?.data,
         isLoading: filterResults?.isLoading ?? false,
