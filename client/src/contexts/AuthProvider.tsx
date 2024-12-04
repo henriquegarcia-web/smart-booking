@@ -4,11 +4,7 @@ import { toast } from 'react-toastify'
 
 import { useRegisterAccess, useRegister, useLogin } from '@/hooks/data/useAuth'
 import { verifyToken } from '@/services/auth'
-// import {
-//   useAllUsersProfile,
-//   useDeleteUser,
-//   useToggleUserBlock
-// } from '@/hooks/data/useUser'
+
 import {
   useUserProfile,
   useAllUsersProfile,
@@ -16,7 +12,6 @@ import {
   useToggleUserBlock
 } from '@/hooks/data/useUser'
 import { IUser } from '@/types/globals'
-// import { queryClient } from '@/lib/react-query'
 import { useQueryClient } from '@tanstack/react-query'
 
 type AdminTheme = 'light' | 'dark'

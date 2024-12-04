@@ -6,7 +6,8 @@ import {
   theme,
   ConfigProvider,
   Tooltip,
-  Select
+  Select,
+  InputNumber
 } from 'antd'
 const { RangePicker } = DatePicker
 import locale from 'antd/locale/pt_BR'
@@ -22,6 +23,9 @@ import {
   filterCountsLimit,
   pensionSchemeData
 } from '@/data/admin'
+import { formatBookingData } from '@/utils/functions/formatBookingData'
+import { useFilter } from '@/contexts/FilterProvider'
+import { useEffect } from 'react'
 
 const ApartmentSchema = Yup.object().shape({
   adultCount: Yup.number()
@@ -33,10 +37,21 @@ const ApartmentSchema = Yup.object().shape({
     .min(0, 'A quantidade de crianças não pode ser negativa')
     .required('A quantidade de crianças é obrigatória')
     .defined(),
+  childrenAges: Yup.array().of(
+    Yup.number()
+      .min(0, 'A idade da criança não pode ser negativa')
+      .max(17, 'A idade máxima para criança é 17 anos')
+      .required('A idade da criança é obrigatória')
+  ),
   seniorCount: Yup.number()
     .min(0, 'A quantidade de idosos não pode ser negativa')
     .required('A quantidade de idosos é obrigatória')
-    .defined()
+    .defined(),
+  seniorAges: Yup.array().of(
+    Yup.number()
+      .min(60, 'A idade mínima para idoso é 60 anos')
+      .required('A idade do idoso é obrigatória')
+  )
 })
 
 const SearchAccommodationsSchema = Yup.object().shape({
@@ -52,7 +67,7 @@ const SearchAccommodationsSchema = Yup.object().shape({
     )
     .required('As datas de entrada e saída são obrigatórias')
     .defined(),
-  boardPlan: Yup.string()
+  mealType: Yup.string()
     .required('O regime de pensão é obrigatório')
     .nullable(),
   discountRate: Yup.number().nullable(),
@@ -63,17 +78,19 @@ const SearchAccommodationsSchema = Yup.object().shape({
 })
 
 type IApartment = Yup.InferType<typeof ApartmentSchema>
-type ISearchForm = Yup.InferType<typeof SearchAccommodationsSchema>
+export type ISearchForm = Yup.InferType<typeof SearchAccommodationsSchema>
 
 const SearchFormDefaultValues: ISearchForm = {
   checkInOutDate: [null, null],
-  boardPlan: undefined,
+  mealType: undefined,
   discountRate: undefined,
   apartments: [
     {
       adultCount: 1,
       childCount: 0,
-      seniorCount: 0
+      seniorCount: 0,
+      childrenAges: [],
+      seniorAges: []
     }
   ]
 }
@@ -82,6 +99,7 @@ interface ISearchAccommodationForm {}
 
 const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
   const { token } = theme.useToken()
+  const { handleFilter, filterResults } = useFilter()
 
   const {
     control,
@@ -112,7 +130,8 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
   }
 
   const onSubmit = async (data: ISearchForm) => {
-    console.log(data)
+    const formattedData = formatBookingData(data)
+    await handleFilter(formattedData)
   }
 
   const formattedPensionScheme = pensionSchemeData.map((role) => ({
@@ -149,6 +168,10 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
     )
     return formattedCountFullOptions
   }
+
+  useEffect(() => {
+    console.log(filterResults)
+  }, [filterResults])
 
   return (
     <S.SearchAccommodationForm
@@ -191,13 +214,13 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
           )}
         />
         <Controller
-          name="boardPlan"
+          name="mealType"
           control={control}
           render={({ field }) => (
             <Form.Item
               label="Regime de pensão"
-              validateStatus={!!errors.boardPlan ? 'error' : ''}
-              help={errors?.boardPlan?.message || null}
+              validateStatus={!!errors.mealType ? 'error' : ''}
+              help={errors?.mealType?.message || null}
             >
               <Select
                 {...field}
@@ -322,6 +345,90 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                   </Form.Item>
                 )}
               />
+            </S.ApartmentSectionWrapper>
+            <S.ApartmentSectionWrapper>
+              <S.AgesInputWrapper />
+              {watch(`apartments.${index}.childCount`) > 0 ? (
+                <S.AgesInputWrapper>
+                  <h3>Idades das crianças</h3>
+                  {Array.from({
+                    length: watch(`apartments.${index}.childCount`)
+                  }).map((_, childIndex) => (
+                    <Controller
+                      key={childIndex}
+                      name={`apartments.${index}.childrenAges.${childIndex}`}
+                      control={control}
+                      defaultValue={0}
+                      render={({ field }) => (
+                        <Form.Item
+                          validateStatus={
+                            errors.apartments?.[index]?.childrenAges?.[
+                              childIndex
+                            ]
+                              ? 'error'
+                              : ''
+                          }
+                          help={
+                            errors.apartments?.[index]?.childrenAges?.[
+                              childIndex
+                            ]?.message
+                          }
+                        >
+                          <InputNumber
+                            {...field}
+                            addonBefore={`Criança ${childIndex + 1}`}
+                            min={0}
+                            max={17}
+                            placeholder="Idade"
+                          />
+                        </Form.Item>
+                      )}
+                    />
+                  ))}
+                </S.AgesInputWrapper>
+              ) : (
+                <S.AgesInputWrapper />
+              )}
+              {watch(`apartments.${index}.seniorCount`) > 0 ? (
+                <S.AgesInputWrapper>
+                  <h3>Idades dos idosos</h3>
+                  {Array.from({
+                    length: watch(`apartments.${index}.seniorCount`)
+                  }).map((_, seniorIndex) => (
+                    <Controller
+                      key={seniorIndex}
+                      name={`apartments.${index}.seniorAges.${seniorIndex}`}
+                      control={control}
+                      defaultValue={60}
+                      render={({ field }) => (
+                        <Form.Item
+                          validateStatus={
+                            errors.apartments?.[index]?.seniorAges?.[
+                              seniorIndex
+                            ]
+                              ? 'error'
+                              : ''
+                          }
+                          help={
+                            errors.apartments?.[index]?.seniorAges?.[
+                              seniorIndex
+                            ]?.message
+                          }
+                        >
+                          <InputNumber
+                            {...field}
+                            addonBefore={`Idoso ${seniorIndex + 1}`}
+                            min={60}
+                            placeholder="Idade"
+                          />
+                        </Form.Item>
+                      )}
+                    />
+                  ))}
+                </S.AgesInputWrapper>
+              ) : (
+                <S.AgesInputWrapper />
+              )}
             </S.ApartmentSectionWrapper>
           </S.ApartmentSection>
         ))}

@@ -5,6 +5,7 @@ import AppRoutes from '@/Routes'
 import { ConfigProvider, theme } from 'antd'
 
 import { AuthProvider, useAuth } from '@/contexts/AuthProvider'
+import { FilterProvider } from './contexts/FilterProvider'
 
 function App() {
   const { adminTheme } = useAuth()
@@ -15,16 +16,18 @@ function App() {
 
   return (
     <AuthProvider>
-      <ConfigProvider
-        theme={{
-          algorithm: themeSelected,
-          token: {
-            colorPrimary: '#FF7A00'
-          }
-        }}
-      >
-        <AppRoutes />
-      </ConfigProvider>
+      <FilterProvider>
+        <ConfigProvider
+          theme={{
+            algorithm: themeSelected,
+            token: {
+              colorPrimary: '#FF7A00'
+            }
+          }}
+        >
+          <AppRoutes />
+        </ConfigProvider>
+      </FilterProvider>
     </AuthProvider>
   )
 }

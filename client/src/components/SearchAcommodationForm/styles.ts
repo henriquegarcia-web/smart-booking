@@ -42,7 +42,6 @@ export const ApartmentsFormWrapper = styled.div`
 export const ApartmentSection = styled.div`
   display: flex;
   flex-direction: column;
-  row-gap: 15px;
   padding: ${Sizes.spacing};
   border-radius: 6px;
 `
@@ -64,6 +63,21 @@ export const ApartmentSectionWrapper = styled.div`
   display: flex;
   column-gap: 10px;
   width: 100%;
+  margin-top: 20px;
+`
+
+export const AgesInputWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  row-gap: 6px;
+  width: calc(100% / 3);
+
+  h3 {
+    margin-bottom: 4px;
+    font-size: 14px;
+    line-height: 14px;
+    font-weight: 500;
+  }
 `
 
 export const SearchAccommodationFormFooter = styled.div`
