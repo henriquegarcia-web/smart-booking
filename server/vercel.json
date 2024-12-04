@@ -14,7 +14,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/src/index.js"
+      "destination": "src/index.js"
     }
   ],
   "headers": [
