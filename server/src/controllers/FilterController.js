@@ -24,12 +24,13 @@ async function authenticateTravelXs() {
       }
     })
 
+    console.log(
+      'Token de autenticação obtido:',
+      response.headers['x-token'].substring(0, 10) + '...'
+    )
     return response.headers['x-token']
   } catch (error) {
-    console.error(
-      'Erro na autenticação:',
-      error.response ? error.response.data : error.message
-    )
+    console.error('Erro na autenticação:', error.message)
     throw error
   }
 }
@@ -64,6 +65,12 @@ async function makeTravelXsRequest(
       data.chdsAges = formattedChildsAges
     }
 
+    console.log('Fazendo requisição para hoteisAvailabilityAndPrice:', {
+      checkInDate,
+      checkOutDate,
+      days,
+      adultCount
+    })
     const response = await axios({
       method: 'post',
       url: 'https://travel3.novaxs.com.br/channel/b2b/hoteisAvailabilityAndPrice',
@@ -81,11 +88,12 @@ async function makeTravelXsRequest(
       data: data
     })
 
+    console.log('Número de hotéis retornados:', response.data.length)
     return response.data
   } catch (error) {
     console.error(
-      'Erro na requisição:',
-      error.response ? error.response.data : error.message
+      'Erro na requisição hoteisAvailabilityAndPrice:',
+      error.message
     )
     throw error
   }
@@ -98,6 +106,7 @@ async function makeMealPathRequest(
   checkOutDate
 ) {
   try {
+    console.log('Fazendo requisição mealPath para hotel:', hotelPath)
     const response = await axios({
       method: 'post',
       url: 'https://travel3.novaxs.com.br/channel//b2b/mealPath',
@@ -118,17 +127,14 @@ async function makeMealPathRequest(
         endDate: checkOutDate
       }
     })
+    console.log('Número de opções de refeição:', response.data.length)
     return response.data
   } catch (error) {
-    console.error(
-      'Erro na requisição mealPath:',
-      error.response ? error.response.data : error.message
-    )
+    console.error('Erro na requisição mealPath:', error.message)
     throw error
   }
 }
 
-// Nova função para chamar a API price
 async function makePriceRequest(
   token,
   agencyPath,
@@ -139,6 +145,11 @@ async function makePriceRequest(
   checkin
 ) {
   try {
+    console.log('Fazendo requisição price para:', {
+      servicePath,
+      mealPath,
+      checkin
+    })
     const response = await axios({
       method: 'post',
       url: 'https://travel3.novaxs.com.br/channel//b2b/price',
@@ -168,45 +179,50 @@ async function makePriceRequest(
         }
       }
     })
+    console.log('Preço retornado:', response.data.value)
     return response.data
   } catch (error) {
-    console.error(
-      'Erro na requisição price:',
-      error.response ? error.response.data : error.message
-    )
+    console.error('Erro na requisição price:', error.message)
     throw error
   }
 }
 
-function formatDate(dateString) {
-  const date = new Date(dateString)
-  const day = date.getDate().toString().padStart(2, '0')
-  const month = (date.getMonth() + 1).toString().padStart(2, '0')
-  const year = date.getFullYear()
-  return `${day}/${month}/${year}`
-}
-
 export const findAccommodationsOnTravelXs = async (req, res) => {
-  const { checkInDate, checkOutDate, days, adultCount, childsAges } = req.query
+  const {
+    checkInDate,
+    checkOutDate,
+    days,
+    adultCount,
+    childsAges,
+    mealType, // 'only_breakfast' | 'half_meal' | 'full_meal'
+    unavailable
+  } = req.query
+
+  console.log('Iniciando busca de acomodações com parâmetros:', {
+    checkInDate,
+    checkOutDate,
+    days,
+    adultCount,
+    childsAges
+  })
 
   if (!checkInDate || !checkOutDate || !days || !adultCount) {
     return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
   }
 
   try {
-    const formattedCheckInDate = formatDate(checkInDate)
-    const formattedCheckOutDate = formatDate(checkOutDate)
-
     const token = await authenticateTravelXs()
-    const hoteisData = await makeHoteisAvailabilityAndPriceRequest(
+    const hoteisData = await makeTravelXsRequest(
       token,
-      formattedCheckInDate,
-      formattedCheckOutDate,
+      checkInDate,
+      checkOutDate,
       days,
       adultCount,
       childsAges,
-      true
+      unavailable
     )
+
+    console.log('Dados de hotéis recebidos:', hoteisData.length)
 
     const filterResults = []
 
@@ -215,11 +231,32 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
       const mealPathData = await makeMealPathRequest(
         token,
         hotelInfo.hotelPath,
-        formattedCheckInDate,
-        formattedCheckOutDate
+        checkInDate,
+        checkOutDate
       )
 
       for (const meal of mealPathData) {
+        console.log(
+          '==============> ',
+          meal.service,
+          meal.service !== 'Café da Manhã'
+        )
+
+        if (mealType === 'only_breakfast' && meal.service !== 'Café da Manhã') {
+          continue
+        }
+        if (
+          mealType === 'half_meal' &&
+          !['Café da Manhã e Jantar', 'Café da Manhã e Almoço'].includes(
+            meal.service
+          )
+        ) {
+          continue
+        }
+        if (mealType === 'full_meal' && meal.service !== 'Pensão Completa') {
+          continue
+        }
+
         const mealPath = `${hotelInfo.hotelPath}|${meal.pathAsString}`
         const persons = Array(parseInt(adultCount))
           .fill()
@@ -238,7 +275,7 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
           hotelInfo.servicePathsAsString,
           mealPath,
           persons,
-          formattedCheckInDate
+          checkInDate
         )
 
         filterResults.push({
@@ -249,27 +286,25 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
       }
     }
 
+    console.log('Total de resultados filtrados:', filterResults.length)
+
     const response = {
-      filterDateRange: `${formattedCheckInDate} a ${formattedCheckOutDate}`,
+      filterDateRange: `${checkInDate} a ${checkOutDate}`,
       filterAdults: parseInt(adultCount),
       filterChilds: childsAges ? childsAges.split(',').length : 0,
       filterResults: filterResults
     }
 
+    console.log('Resposta final preparada')
     res.json(response)
   } catch (error) {
+    console.error('Erro ao processar a busca de acomodações:', error.message)
     res.status(500).json({
       error: 'Erro ao obter disponibilidade de hotéis',
       details: error.message
     })
   }
 }
-
-// const applyAdditionalFilters = (data, filters) => {
-//   // Implemente a lógica de filtragem adicional aqui
-//   // Por exemplo, filtrar por preço, classificação, etc.
-//   return data
-// }
 
 // ========================================== CONNECT TRAVEL
 

@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { fetchAccommodations } from '@/services/filter'
-import { IAccommodation, IFilterData } from '@/contexts/FilterProvider'
+import { IFilterData, IFilterResults } from '@/contexts/FilterProvider'
 
 const useFilterAccommodations = (filterData: IFilterData | null) => {
-  return useQuery<IAccommodation[]>({
+  return useQuery<IFilterResults>({
     queryKey: ['filterAccommodations', filterData],
     queryFn: () => fetchAccommodations(filterData),
     enabled:

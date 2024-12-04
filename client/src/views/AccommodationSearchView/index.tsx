@@ -1,9 +1,11 @@
+import { useFilter } from '@/contexts/FilterProvider'
 import * as S from './styles'
 
 import { SearchAcommodationForm, ViewHeader } from '@/components'
-import { formatCurrency } from '@/utils/functions/formatCurrency'
-import { Collapse, Space, Table, Tag, theme } from 'antd'
+import { formatTextToCurrency } from '@/utils/functions/formatCurrency'
+import { Button, Collapse, Space, Table, Tag, theme } from 'antd'
 import type { CollapseProps, TableProps } from 'antd'
+import { useMemo } from 'react'
 
 const items: CollapseProps['items'] = [
   {
@@ -13,14 +15,14 @@ const items: CollapseProps['items'] = [
   }
 ]
 
-interface DataType {
+interface IFilterData {
   key: string
   accommodationName: string
-  accommodationPrice: number
+  accommodationPrice: string
   accommodationMeal: string
 }
 
-const columns: TableProps<DataType>['columns'] = [
+const columns: TableProps<IFilterData>['columns'] = [
   {
     title: 'Hospedagem',
     dataIndex: 'accommodationName',
@@ -30,7 +32,7 @@ const columns: TableProps<DataType>['columns'] = [
     title: 'Preço',
     dataIndex: 'accommodationPrice',
     key: 'accommodationPrice',
-    render: (price) => formatCurrency(price)
+    render: (price) => formatTextToCurrency(price)
   },
   {
     title: 'Tipo de Pensão',
@@ -49,19 +51,22 @@ const columns: TableProps<DataType>['columns'] = [
   // }
 ]
 
-const data: DataType[] = [
-  {
-    key: '1',
-    accommodationName: 'John Brown',
-    accommodationPrice: 0,
-    accommodationMeal: ''
-  }
-]
-
 interface IAccommodationSearchView {}
 
 const AccommodationSearchView = ({}: IAccommodationSearchView) => {
   const { token } = theme.useToken()
+  const { filterResults } = useFilter()
+
+  const formattedUsersList: IFilterData[] = useMemo(() => {
+    if (!filterResults?.data?.filterResults) return []
+
+    return filterResults.data.filterResults.map((accommodation) => ({
+      key: accommodation.accommodationName,
+      accommodationName: accommodation.accommodationName,
+      accommodationPrice: accommodation.accommodationPrice,
+      accommodationMeal: accommodation.accommodationMeal
+    }))
+  }, [filterResults])
 
   return (
     <S.AccommodationSearchView>
@@ -69,12 +74,24 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
         title="Filtro de Hospedagens"
         legend="Filtro e obtenha uma lista de hospedagens"
       >
-        {/* <Button onClick={handleOpenCreateAccessModal}>Criar Acesso</Button> */}
+        <Button
+          disabled={!filterResults?.data || filterResults?.isLoading}
+          onClick={() => {}}
+        >
+          Exportar Dados
+        </Button>
       </ViewHeader>
 
       <Collapse items={items} defaultActiveKey={['1']} />
 
-      <Table<DataType> columns={columns} dataSource={data} />
+      <Table<IFilterData>
+        columns={columns}
+        dataSource={formattedUsersList}
+        style={{
+          borderRadius: 8,
+          border: `1px solid ${token.colorBorder}`
+        }}
+      />
     </S.AccommodationSearchView>
   )
 }

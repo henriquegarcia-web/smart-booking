@@ -159,6 +159,10 @@ const UsersAccessView = ({}: IUsersAccessView) => {
           columns={columns}
           dataSource={formattedUsersList}
           rowClassName={(record) => (record.blocked ? 'blocked-row' : '')}
+          style={{
+            borderRadius: 8,
+            border: `1px solid ${token.colorBorder}`
+          }}
         />
       </S.UsersAccessView>
 

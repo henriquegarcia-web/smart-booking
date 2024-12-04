@@ -1,14 +1,12 @@
 import { ISearchForm } from '@/components/SearchAcommodationForm'
 import { IFilterData } from '@/contexts/FilterProvider'
 
-const handleFormatDate = (date: Date) => {
-  const formattedCheckInDate = `${date.toString().padStart(2, '0')}/${(
-    date.getMonth() + 1
-  )
-    .toString()
-    .padStart(2, '0')}/${date.getFullYear()}`
+const handleFormatDate = (date: Date): string => {
+  const day = date.getDate().toString().padStart(2, '0')
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const year = date.getFullYear()
 
-  return formattedCheckInDate
+  return `${day}/${month}/${year}`
 }
 
 const formatBookingData = (bookingData: ISearchForm): IFilterData => {

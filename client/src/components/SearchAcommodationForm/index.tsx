@@ -112,7 +112,8 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
   } = useForm<ISearchForm>({
     mode: 'all',
     resolver: yupResolver(SearchAccommodationsSchema),
-    defaultValues: SearchFormDefaultValues
+    defaultValues: SearchFormDefaultValues,
+    disabled: filterResults?.isLoading || false
   })
   const { errors, isSubmitting, isValid } = formState
   const checkInOutDate = watch('checkInOutDate')
@@ -169,9 +170,9 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
     return formattedCountFullOptions
   }
 
-  useEffect(() => {
-    console.log(filterResults)
-  }, [filterResults])
+  // useEffect(() => {
+  //   console.log(filterResults?.data)
+  // }, [filterResults])
 
   return (
     <S.SearchAccommodationForm
@@ -208,6 +209,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                       ]
                     )
                   }}
+                  disabled={filterResults?.isLoading || false}
                 />
               </ConfigProvider>
             </Form.Item>
@@ -227,6 +229,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                 placeholder="Selecione uma opção"
                 options={formattedPensionScheme}
                 allowClear
+                disabled={filterResults?.isLoading || false}
               />
             </Form.Item>
           )}
@@ -245,6 +248,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                 placeholder="Selecione uma opção"
                 options={formattedDiscountRates}
                 allowClear
+                disabled={filterResults?.isLoading || false}
               />
             </Form.Item>
           )}
@@ -254,6 +258,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
       <S.ApartmentsFormWrapper>
         {apartments.length < 10 && (
           <Button
+            disabled={filterResults?.isLoading || false}
             style={{ width: 'fit-content' }}
             onClick={() =>
               append({ adultCount: 1, childCount: 0, seniorCount: 0 })
@@ -277,7 +282,12 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                   title={`Remover apartamento ${index + 1}`}
                   arrow={true}
                 >
-                  <Button onClick={() => remove(index)}>Remover</Button>
+                  <Button
+                    disabled={filterResults?.isLoading || false}
+                    onClick={() => remove(index)}
+                  >
+                    Remover
+                  </Button>
                 </Tooltip>
               )}
             </S.ApartmentSectionHeader>
@@ -299,6 +309,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                         field.onChange(value)
                       }}
                       options={getFormattedCountOptions('adulto')}
+                      disabled={filterResults?.isLoading || false}
                     />
                   </Form.Item>
                 )}
@@ -320,6 +331,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                         field.onChange(value)
                       }}
                       options={getFormattedCountFullOptions('criança')}
+                      disabled={filterResults?.isLoading || false}
                     />
                   </Form.Item>
                 )}
@@ -341,6 +353,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                         field.onChange(value)
                       }}
                       options={getFormattedCountFullOptions('idoso')}
+                      disabled={filterResults?.isLoading || false}
                     />
                   </Form.Item>
                 )}
@@ -378,8 +391,9 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                             {...field}
                             addonBefore={`Criança ${childIndex + 1}`}
                             min={0}
-                            max={17}
+                            max={13}
                             placeholder="Idade"
+                            disabled={filterResults?.isLoading || false}
                           />
                         </Form.Item>
                       )}
@@ -420,6 +434,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                             addonBefore={`Idoso ${seniorIndex + 1}`}
                             min={60}
                             placeholder="Idade"
+                            disabled={filterResults?.isLoading || false}
                           />
                         </Form.Item>
                       )}
@@ -439,7 +454,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
         <Button
           type="primary"
           htmlType="submit"
-          disabled={!isFormValid}
+          disabled={!isFormValid || filterResults?.isLoading}
           loading={isSubmitting}
         >
           Buscar

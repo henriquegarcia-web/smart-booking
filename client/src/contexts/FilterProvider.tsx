@@ -3,7 +3,8 @@ import {
   useContext,
   useMemo,
   useState,
-  useCallback
+  useCallback,
+  useEffect
 } from 'react'
 import { toast } from 'react-toastify'
 import { useQueryClient } from '@tanstack/react-query'
@@ -21,11 +22,22 @@ export interface IFilterData {
   unavailable?: boolean
 }
 
-export interface IAccommodation {}
+export interface IAccommodation {
+  accommodationName: string
+  accommodationPrice: string
+  accommodationMeal: string
+}
+
+export interface IFilterResults {
+  filterAdults: number
+  filterChilds: number
+  filterDateRange: string
+  filterResults: IAccommodation[]
+}
 
 interface IFilterContextData {
   filterResults: {
-    data: IAccommodation | undefined
+    data: IFilterResults | undefined
     isLoading: boolean
     error: Error | null
     withoutSearch: boolean
@@ -45,7 +57,6 @@ const FilterProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleFilter = async (newFilterData: IFilterData) => {
     try {
-      console.log(newFilterData)
       setFilterData(newFilterData)
       await queryClient.invalidateQueries({
         queryKey: ['filterAccommodations']
@@ -59,7 +70,12 @@ const FilterProvider = ({ children }: { children: React.ReactNode }) => {
       return false
     }
   }
-  //
+
+  // useEffect(() => {
+  //   // console.log('FILTER DATA ===>', filterData)
+  //   // console.log('FILTER RESULTS DATA ===>', filterResults.data)
+  //   console.log('FILTER RESULTS LOADING DATA ===>', filterResults.isLoading)
+  // }, [filterResults])
 
   const FilterContextData = useMemo(
     () => ({
@@ -71,7 +87,7 @@ const FilterProvider = ({ children }: { children: React.ReactNode }) => {
       },
       handleFilter
     }),
-    [filterData]
+    [filterData, filterResults]
   )
 
   return (

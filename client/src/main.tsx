@@ -13,6 +13,7 @@ import 'react-toastify/dist/ReactToastify.css'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      refetchOnWindowFocus: false
       // staleTime: 4 * 1000,
       // refetchInterval: 4 * 1000
     }
