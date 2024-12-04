@@ -10,9 +10,25 @@ const allowedOrigins = [
 ]
 
 // Configuração do CORS
+// const corsOptions = {
+//   origin: (origin, callback) => {
+//     // Sempre permitir origens válidas ou nulas (para ferramentas de desenvolvimento como Postman)
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true)
+//     } else {
+//       console.error(`Bloqueado pelo CORS: Origem não permitida => ${origin}`)
+//       callback(new Error('Not allowed by CORS'))
+//     }
+//   },
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Inclua OPTIONS
+//   credentials: true, // Habilite envio de credenciais
+//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'], // Permita headers necessários
+//   exposedHeaders: ['Authorization'], // Exponha headers específicos, se necessário
+//   optionsSuccessStatus: 204
+// }
 const corsOptions = {
   origin: (origin, callback) => {
-    // Sempre permitir origens válidas ou nulas (para ferramentas de desenvolvimento como Postman)
+    // Permitir origens específicas
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true)
     } else {
@@ -20,11 +36,18 @@ const corsOptions = {
       callback(new Error('Not allowed by CORS'))
     }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Inclua OPTIONS
-  credentials: true, // Habilite envio de credenciais
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'], // Permita headers necessários
-  exposedHeaders: ['Authorization'], // Exponha headers específicos, se necessário
-  optionsSuccessStatus: 204
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Métodos permitidos
+  credentials: true, // Permitir envio de cookies/autenticação
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With',
+    'Content-Type',
+    'Accept',
+    'Authorization',
+    'X-CSRF-Token'
+  ], // Cabeçalhos permitidos
+  exposedHeaders: ['Authorization'], // Cabeçalhos que podem ser expostos ao cliente
+  optionsSuccessStatus: 204 // Resposta rápida para OPTIONS
 }
 
 const app = express()
