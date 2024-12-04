@@ -6,7 +6,10 @@ import routes from './routes/index.js'
 
 const PORT = process.env.PORT || 5000
 
-const allowedOrigins = ['http://localhost:5173', 'https://dominio-prod.com']
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.CLIENT_CORS_ALLOW_URL
+]
 
 const corsOptions = {
   origin: (origin, callback) => {
