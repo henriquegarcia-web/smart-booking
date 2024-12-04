@@ -29,4 +29,6 @@ export const ViewHeaderLabels = styled.div`
 
 export const ViewHeaderContent = styled.div`
   display: flex;
+  align-items: center;
+  column-gap: 10px;
 `

@@ -47,7 +47,7 @@ const formatTextToCurrency = (value: string) => {
   return `R$ ${formattedValue}`
 }
 
-const applyDiscount = (value, discount) => {
+const applyDiscount = (value, discount, withPercent = true) => {
   if (discount < 0 || discount > 7) {
     throw new Error('Percentual de desconto deve estar entre 0 e 7')
   }
@@ -60,8 +60,9 @@ const applyDiscount = (value, discount) => {
   const valorComDesconto = valorNumerico - desconto
 
   const formattedValue = formatTextToCurrency(valorComDesconto.toString())
-
-  return `${formattedValue}${discount > 0 ? ` (${discount}%)` : ''}`
+  if (withPercent)
+    return `${formattedValue}${discount > 0 ? ` (${discount}%)` : ''}`
+  return formattedValue
 }
 
 export { formatCurrency, formatByCurrency, applyDiscount, formatTextToCurrency }

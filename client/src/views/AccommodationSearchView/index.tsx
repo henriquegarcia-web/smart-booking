@@ -1,14 +1,35 @@
-import { useFilter } from '@/contexts/FilterProvider'
+import {
+  IFilterResults,
+  IFilterResultsData,
+  useFilter
+} from '@/contexts/FilterProvider'
 import * as S from './styles'
+
+import locale from 'antd/locale/pt_BR'
+import dayjs, { Dayjs } from 'dayjs'
+import 'dayjs/locale/pt-br'
+dayjs.locale('pt-br')
 
 import { SearchAcommodationForm, ViewHeader } from '@/components'
 import {
   applyDiscount,
   formatTextToCurrency
 } from '@/utils/functions/formatCurrency'
-import { Button, Collapse, Table, theme } from 'antd'
+import {
+  Button,
+  Collapse,
+  ConfigProvider,
+  Select,
+  Table,
+  Tag,
+  theme
+} from 'antd'
 import type { CollapseProps, TableProps } from 'antd'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { discountRate } from '@/data/admin'
+import { FiDownload } from 'react-icons/fi'
+import { saveAs } from 'file-saver'
+import { toast } from 'react-toastify'
 
 const items: CollapseProps['items'] = [
   {
@@ -20,12 +41,19 @@ const items: CollapseProps['items'] = [
 
 interface IFilterData {
   key: string
+  accommodationProvider: string
   accommodationName: string
   accommodationPrice: string
   accommodationMeal: string
 }
 
 const columns: TableProps<IFilterData>['columns'] = [
+  {
+    title: 'Provedor',
+    dataIndex: 'accommodationProvider',
+    key: 'accommodationProvider',
+    render: (tag) => <Tag>{tag}</Tag>
+  },
   {
     title: 'Hospedagem',
     dataIndex: 'accommodationName',
@@ -57,22 +85,70 @@ interface IAccommodationSearchView {}
 
 const AccommodationSearchView = ({}: IAccommodationSearchView) => {
   const { token } = theme.useToken()
-  const { filterData, filterResults } = useFilter()
+  const { filterResults } = useFilter()
+
+  const [selectedDiscount, setSelectedDiscount] = useState(0)
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false)
 
   const formattedUsersList: IFilterData[] = useMemo(() => {
     if (!filterResults?.data?.filterResults) return []
 
     return filterResults.data.filterResults.map((accommodation, index) => ({
       key: `${accommodation.accommodationName}-${accommodation.accommodationPrice}-${accommodation.accommodationMeal}-${index}`,
+      accommodationProvider: filterResults.data.filterProvider || '',
       accommodationName: accommodation?.accommodationName || '',
       accommodationPrice:
         applyDiscount(
           accommodation?.accommodationPrice || '',
-          filterData.discount || 0
+          selectedDiscount || 0
         ) || '',
       accommodationMeal: accommodation?.accommodationMeal || ''
     }))
-  }, [filterData, filterResults])
+  }, [selectedDiscount, filterResults])
+
+  // console.log(filterResults)
+
+  const formattedDiscountRates = Array.from(
+    { length: discountRate },
+    (_, index) => ({
+      value: index + 1,
+      label: `${index + 1}% de desconto`
+    })
+  )
+
+  const handleChangeDiscount = (value: number) => {
+    setSelectedDiscount(value)
+  }
+
+  const generateAndDownloadTxt = (data: IFilterResultsData) => {
+    try {
+      setIsDownloadLoading(true)
+
+      let content = `${data.filterDateRange}${
+        selectedDiscount > 0 ? `/${selectedDiscount}` : ''
+      }\n`
+      content += `${data.filterAdults} adultos\n`
+      content += `${data.filterChilds} crianças\n\n`
+
+      data.filterResults.forEach((accommodation) => {
+        content += `${accommodation.accommodationName}\n`
+        content += `${applyDiscount(
+          accommodation.accommodationPrice,
+          selectedDiscount,
+          false
+        )}\n`
+        content += `${accommodation.accommodationMeal}\n\n`
+      })
+
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+      saveAs(blob, 'lista_de_hospedagem.txt')
+      toast('Download realizado com sucesso')
+    } catch (error) {
+      toast('Falha ao realizar download')
+    } finally {
+      setIsDownloadLoading(false)
+    }
+  }
 
   return (
     <S.AccommodationSearchView>
@@ -80,9 +156,23 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
         title="Filtro de Hospedagens"
         legend="Filtro e obtenha uma lista de hospedagens"
       >
+        <Select
+          placeholder="Selecione um desconto"
+          options={formattedDiscountRates}
+          allowClear
+          disabled={filterResults?.isLoading || isDownloadLoading || false}
+          onChange={handleChangeDiscount}
+        />
         <Button
-          disabled={!filterResults?.data || filterResults?.isLoading}
-          onClick={() => {}}
+          type="dashed"
+          disabled={
+            !filterResults?.data ||
+            filterResults?.isLoading ||
+            isDownloadLoading
+          }
+          icon={<FiDownload />}
+          iconPosition="start"
+          onClick={() => generateAndDownloadTxt(filterResults?.data)}
         >
           Exportar Dados
         </Button>
@@ -90,14 +180,16 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
 
       <Collapse items={items} />
 
-      <Table<IFilterData>
-        columns={columns}
-        dataSource={formattedUsersList}
-        style={{
-          borderRadius: 8,
-          border: `1px solid ${token.colorBorder}`
-        }}
-      />
+      <ConfigProvider locale={locale}>
+        <Table<IFilterData>
+          columns={columns}
+          dataSource={formattedUsersList}
+          style={{
+            borderRadius: 8,
+            border: `1px solid ${token.colorBorder}`
+          }}
+        />
+      </ConfigProvider>
     </S.AccommodationSearchView>
   )
 }

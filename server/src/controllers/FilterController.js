@@ -342,6 +342,7 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
     console.log('Total de resultados filtrados:', filterResults.length)
 
     const response = {
+      filterProvider: 'Travel XS',
       filterDateRange: `${checkInDate} a ${checkOutDate}`,
       filterAdults: parseInt(adultCount),
       filterChilds: childsAges ? childsAges.split(',').length : 0,

@@ -29,21 +29,24 @@ export interface IAccommodation {
   accommodationMeal: string
 }
 
-export interface IFilterResults {
+export interface IFilterResultsData {
+  filterProvider: string
   filterAdults: number
   filterChilds: number
   filterDateRange: string
   filterResults: IAccommodation[]
 }
 
+export interface IFilterResults {
+  data: IFilterResultsData
+  isLoading: boolean
+  error: Error
+  withoutSearch: boolean
+}
+
 interface IFilterContextData {
   filterData: IFilterData
-  filterResults: {
-    data: IFilterResults | undefined
-    isLoading: boolean
-    error: Error | null
-    withoutSearch: boolean
-  }
+  filterResults: IFilterResults
   handleFilter: (newFilterData: IFilterData) => Promise<boolean>
 }
 
@@ -79,7 +82,7 @@ const FilterProvider = ({ children }: { children: React.ReactNode }) => {
   //   console.log('FILTER RESULTS LOADING DATA ===>', filterResults.isLoading)
   // }, [filterResults])
 
-  const FilterContextData = useMemo(
+  const FilterContextData: IFilterContextData = useMemo(
     () => ({
       filterData,
       filterResults: {

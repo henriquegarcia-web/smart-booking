@@ -141,14 +141,6 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
     label: role.schemeLabel
   }))
 
-  const formattedDiscountRates = Array.from(
-    { length: discountRate },
-    (_, index) => ({
-      value: index + 1,
-      label: `${index + 1}%`
-    })
-  )
-
   const getFormattedCountOptions = (label: string, length: number) => {
     const formattedCountOptions = Array.from(
       { length: length },
@@ -235,7 +227,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
             </Form.Item>
           )}
         />
-        <Controller
+        {/* <Controller
           name="discountRate"
           control={control}
           render={({ field }) => (
@@ -253,7 +245,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
               />
             </Form.Item>
           )}
-        />
+        /> */}
       </S.MainFormWrapper>
 
       <S.ApartmentsFormWrapper>
@@ -416,7 +408,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
           disabled={!isFormValid}
           loading={isSubmitting || filterResults?.isLoading}
         >
-          Buscar
+          {filterResults?.isLoading ? 'Buscando' : 'Buscar'}
         </Button>
       </S.SearchAccommodationFormFooter>
     </S.SearchAccommodationForm>
