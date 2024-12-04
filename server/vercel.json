@@ -12,12 +12,6 @@
       "dest": "src/index.js"
     }
   ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "https://vmtcot-server.vercel.app/api/$1"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",
