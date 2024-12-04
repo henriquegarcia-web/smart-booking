@@ -36,12 +36,14 @@ app.use(bodyParser.urlencoded({ extended: true }))
 // Routes
 app.use('/api', routes)
 
-connectDatabase()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Servidor ativo, porta: ${PORT}`)
-    })
-  })
-  .catch((err) => {
-    console.error('Falha ao tentar se conectar a database', err)
-  })
+export default app
+
+// connectDatabase()
+//   .then(() => {
+//     app.listen(PORT, () => {
+//       console.log(`Servidor ativo, porta: ${PORT}`)
+//     })
+//   })
+//   .catch((err) => {
+//     console.error('Falha ao tentar se conectar a database', err)
+//   })

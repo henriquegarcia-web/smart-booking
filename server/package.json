@@ -2,11 +2,11 @@
   "name": "smart-booking-server",
   "version": "1.0.0",
   "description": "",
-  "main": "src/server.js",
+  "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
