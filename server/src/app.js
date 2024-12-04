@@ -3,7 +3,10 @@ import bodyParser from 'body-parser'
 import cors from 'cors'
 import routes from './routes/index.js'
 
-const allowedOrigins = ['http://localhost:5173', 'https://dominio-prod.com']
+const allowedOrigins = [
+  'http://localhost:5173',
+  process.env.CLIENT_CORS_ALLOW_URL
+]
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -29,5 +32,9 @@ app.use(bodyParser.urlencoded({ extended: true }))
 
 // Routes
 app.use('/api', routes)
+
+app.get('/test', (req, res) => {
+  res.json({ message: 'Teste bem-sucedido! O servidor está funcionando.' })
+})
 
 export default app
