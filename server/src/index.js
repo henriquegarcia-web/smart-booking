@@ -1,12 +1,12 @@
 import app from './server.js'
 import { connectDatabase } from './config/database.js'
 
-const PORT = process.env.PORT || 5000
+const PORTA = process.env.PORT || 5000
 
 connectDatabase()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Servidor ativo, porta: ${PORT}`)
+    app.listen(PORTA, () => {
+      console.log(`Servidor ativo, portAa: ${PORT}`)
     })
   })
   .catch((err) => {
