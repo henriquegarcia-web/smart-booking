@@ -12,17 +12,19 @@ const allowedOrigins = [
 // Configuração do CORS
 const corsOptions = {
   origin: (origin, callback) => {
-    // Permite requisições de origem no ambiente local ou produção
+    // Sempre permitir origens válidas ou nulas (para ferramentas de desenvolvimento como Postman)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true)
     } else {
       console.error(`Bloqueado pelo CORS: Origem não permitida => ${origin}`)
-      callback(new Error('Bloqueado pelo CORS'))
+      callback(new Error('Not allowed by CORS'))
     }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true, // Permite envio de cookies/autenticação
-  optionsSuccessStatus: 204 // Sem conteúdo para requisições OPTIONS
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Inclua OPTIONS
+  credentials: true, // Habilite envio de credenciais
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'], // Permita headers necessários
+  exposedHeaders: ['Authorization'], // Exponha headers específicos, se necessário
+  optionsSuccessStatus: 204
 }
 
 const app = express()
@@ -33,6 +35,21 @@ app.use(cors(corsOptions))
 // Middleware para parsing de body (json e url-encoded)
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*') // Permita todas as origens (ou configure especificamente)
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  )
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204) // Responda rapidamente para requisições preflight
+  } else {
+    next()
+  }
+})
 
 // Definição de rotas
 app.use('/api', routes)
