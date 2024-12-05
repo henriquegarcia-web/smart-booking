@@ -241,14 +241,6 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
     unavailable
   } = req.query
 
-  // console.log('Iniciando busca de acomodações com parâmetros:', {
-  //   checkInDate,
-  //   checkOutDate,
-  //   days,
-  //   adultCount,
-  //   childsAges
-  // })
-
   if (!checkInDate || !checkOutDate || !days || !adultCount) {
     return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
   }
@@ -266,72 +258,86 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
     )
 
     console.log('Dados de hotéis recebidos:', hoteisData.length)
-
     const filterResults = []
 
     for (const hotel of hoteisData) {
-      const hotelInfo = hotel.result[0]
-      const mealPathData = await makeMealPathRequest(
-        token,
-        hotelInfo.hotelPath,
-        checkInDate,
-        checkOutDate
-      )
+      let lowestPrice = null
+      let bestOption = null
 
-      for (const meal of mealPathData) {
-        const validation = compareMealTypeAndService(mealType, meal.service)
+      // Percorre cada opção dentro de hotel.result
+      for (const roomOption of hotel.result) {
+        // Para cada opção de quarto, verifica as refeições (mealPathData)
+        const mealPathData = await makeMealPathRequest(
+          token,
+          roomOption.hotelPath,
+          checkInDate,
+          checkOutDate
+        )
 
-        if (validation) {
-          const mealPath = `${hotelInfo.hotelPath}|${meal.pathAsString}`
-          const adultsAmount = Array(parseInt(adultCount))
-            .fill()
-            .map(() => ({
-              id: 0,
-              name: '',
-              tag: 'Adulto',
-              mailing: false,
-              forSave: true
-            }))
-          const childsAmount = !!childsAges
-            ? Array(Array(childsAges).length)
-                .fill()
-                .map(() => ({
-                  id: 0,
-                  name: '',
-                  tag: 'Colo',
-                  mailing: false,
-                  forSave: true
-                }))
-            : null
-
-          const persons = childsAges
-            ? adultsAmount.concat(childsAmount)
-            : adultsAmount
-
-          const priceData = await makePriceRequest(
-            token,
-            'agencies/1996',
-            hotelInfo.servicePath,
-            hotelInfo.servicePathsAsString,
-            mealPath,
-            persons,
-            checkInDate,
-            days
+        for (const mealOption of mealPathData) {
+          const validation = compareMealTypeAndService(
+            mealType,
+            mealOption.service
           )
 
-          if (
-            !!priceData &&
-            !!priceData?.value &&
-            priceData?.value !== undefined &&
-            priceData?.value !== null &&
-            priceData?.value !== ''
-          )
-            filterResults.push({
-              accommodationName: hotelInfo.hotelName,
-              accommodationPrice: priceData.value,
-              accommodationMeal: getMealTypeDescription(mealType)
-            })
+          if (validation) {
+            const mealPath = `${roomOption.hotelPath}|${mealOption.pathAsString}`
+            const adultsAmount = Array(parseInt(adultCount))
+              .fill()
+              .map(() => ({
+                id: 0,
+                name: '',
+                tag: 'Adulto',
+                mailing: false,
+                forSave: true
+              }))
+            const childsAmount = !!childsAges
+              ? Array(Array(childsAges).length)
+                  .fill()
+                  .map(() => ({
+                    id: 0,
+                    name: '',
+                    tag: 'Colo',
+                    mailing: false,
+                    forSave: true
+                  }))
+              : null
+
+            const persons = childsAges
+              ? adultsAmount.concat(childsAmount)
+              : adultsAmount
+
+            const priceData = await makePriceRequest(
+              token,
+              'agencies/1996',
+              roomOption.servicePath,
+              roomOption.servicePathsAsString,
+              mealPath,
+              persons,
+              checkInDate,
+              days
+            )
+
+            if (!!priceData && !!priceData?.value) {
+              const numericPrice = parseFloat(priceData.value.replace(',', ''))
+
+              // Se encontrar um valor menor ou a primeira vez, armazena os dados
+              if (lowestPrice === null || numericPrice < lowestPrice) {
+                lowestPrice = numericPrice
+                bestOption = {
+                  accommodationName: roomOption.hotelName,
+                  accommodationPrice: priceData.value,
+                  accommodationMeal: getMealTypeDescription(mealType)
+                }
+              }
+            }
+          }
         }
+      }
+
+      // Se encontrar uma opção válida com menor preço, adiciona ao resultado
+      if (bestOption) {
+        filterResults.push(bestOption)
       }
     }
 
@@ -355,6 +361,252 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
     })
   }
 }
+
+// export const findAccommodationsOnTravelXs = async (req, res) => {
+//   const {
+//     checkInDate,
+//     checkOutDate,
+//     days,
+//     adultCount,
+//     childsAges,
+//     mealType,
+//     unavailable
+//   } = req.query
+
+//   if (!checkInDate || !checkOutDate || !days || !adultCount) {
+//     return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
+//   }
+
+//   try {
+//     const token = await authenticateTravelXs()
+//     const hoteisData = await makeTravelXsRequest(
+//       token,
+//       checkInDate,
+//       checkOutDate,
+//       days,
+//       adultCount,
+//       childsAges,
+//       unavailable
+//     )
+
+//     console.log('Dados de hotéis recebidos:', hoteisData.length)
+
+//     const filterResults = []
+
+//     for (const hotel of hoteisData) {
+//       let lowestPrice = Infinity
+//       let bestRoom = null
+
+//       // Iteramos sobre todas as opções de quarto
+//       for (const roomOption of hotel.result) {
+//         const mealPathData = await makeMealPathRequest(
+//           token,
+//           roomOption.hotelPath,
+//           checkInDate,
+//           checkOutDate
+//         )
+
+//         for (const meal of mealPathData) {
+//           const validation = compareMealTypeAndService(mealType, meal.service)
+
+//           if (validation) {
+//             const mealPath = `${roomOption.hotelPath}|${meal.pathAsString}`
+//             const adultsAmount = Array(parseInt(adultCount))
+//               .fill()
+//               .map(() => ({
+//                 id: 0,
+//                 name: '',
+//                 tag: 'Adulto',
+//                 mailing: false,
+//                 forSave: true
+//               }))
+//             const childsAmount = childsAges
+//               ? Array(childsAges.split(',').length)
+//                   .fill()
+//                   .map(() => ({
+//                     id: 0,
+//                     name: '',
+//                     tag: 'Colo',
+//                     mailing: false,
+//                     forSave: true
+//                   }))
+//               : []
+
+//             const persons = adultsAmount.concat(childsAmount)
+
+//             const priceData = await makePriceRequest(
+//               token,
+//               'agencies/1996',
+//               roomOption.servicePath,
+//               roomOption.servicePathsAsString,
+//               mealPath,
+//               persons,
+//               checkInDate,
+//               days
+//             )
+
+//             if (
+//               priceData?.value &&
+//               priceData.value !== undefined &&
+//               priceData.value !== null &&
+//               priceData.value !== '' &&
+//               parseInt(priceData.value) < parseInt(lowestPrice)
+//             ) {
+//               lowestPrice = priceData.value
+//               bestRoom = {
+//                 accommodationName: roomOption.hotelName,
+//                 accommodationPrice: priceData.value,
+//                 accommodationMeal: getMealTypeDescription(mealType),
+//                 roomName: roomOption.roomName
+//               }
+//             }
+//           }
+//         }
+//       }
+
+//       if (bestRoom) {
+//         filterResults.push(bestRoom)
+//       }
+//     }
+
+//     console.log('Total de resultados filtrados:', filterResults.length)
+
+//     const response = {
+//       filterProvider: 'Travel XS',
+//       filterDateRange: `${checkInDate} a ${checkOutDate}`,
+//       filterAdults: parseInt(adultCount),
+//       filterChilds: childsAges ? childsAges.split(',').length : 0,
+//       filterResults: filterResults
+//     }
+
+//     console.log('Resposta final preparada')
+//     res.json(response)
+//   } catch (error) {
+//     console.error('Erro ao processar a busca de acomodações:', error.message)
+//     res.status(500).json({
+//       error: 'Erro ao obter disponibilidade de hotéis',
+//       details: error.message
+//     })
+//   }
+// }
+
+// export const findAccommodationsOnTravelXs = async (req, res) => {
+//   const {
+//     checkInDate,
+//     checkOutDate,
+//     days,
+//     adultCount,
+//     childsAges,
+//     mealType,
+//     unavailable
+//   } = req.query
+
+//   if (!checkInDate || !checkOutDate || !days || !adultCount) {
+//     return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
+//   }
+
+//   try {
+//     const token = await authenticateTravelXs()
+//     const hoteisData = await makeTravelXsRequest(
+//       token,
+//       checkInDate,
+//       checkOutDate,
+//       days,
+//       adultCount,
+//       childsAges,
+//       unavailable
+//     )
+
+//     console.log('Dados de hotéis recebidos:', hoteisData.length)
+
+//     const filterResults = []
+
+//     for (const hotel of hoteisData) {
+//       const hotelInfo = hotel.result[0]
+//       const mealPathData = await makeMealPathRequest(
+//         token,
+//         hotelInfo.hotelPath,
+//         checkInDate,
+//         checkOutDate
+//       )
+
+//       for (const meal of mealPathData) {
+//         const validation = compareMealTypeAndService(mealType, meal.service)
+
+//         if (validation) {
+//           const mealPath = `${hotelInfo.hotelPath}|${meal.pathAsString}`
+//           const adultsAmount = Array(parseInt(adultCount))
+//             .fill()
+//             .map(() => ({
+//               id: 0,
+//               name: '',
+//               tag: 'Adulto',
+//               mailing: false,
+//               forSave: true
+//             }))
+//           const childsAmount = !!childsAges
+//             ? Array(Array(childsAges).length)
+//                 .fill()
+//                 .map(() => ({
+//                   id: 0,
+//                   name: '',
+//                   tag: 'Colo',
+//                   mailing: false,
+//                   forSave: true
+//                 }))
+//             : null
+
+//           const persons = childsAges
+//             ? adultsAmount.concat(childsAmount)
+//             : adultsAmount
+
+//           const priceData = await makePriceRequest(
+//             token,
+//             'agencies/1996',
+//             hotelInfo.servicePath,
+//             hotelInfo.servicePathsAsString,
+//             mealPath,
+//             persons,
+//             checkInDate,
+//             days
+//           )
+
+//           if (
+//             !!priceData &&
+//             !!priceData?.value &&
+//             priceData?.value !== undefined &&
+//             priceData?.value !== null &&
+//             priceData?.value !== ''
+//           )
+//             filterResults.push({
+//               accommodationName: hotelInfo.hotelName,
+//               accommodationPrice: priceData.value,
+//               accommodationMeal: getMealTypeDescription(mealType)
+//             })
+//         }
+//       }
+//     }
+
+//     console.log('Total de resultados filtrados:', filterResults.length)
+
+//     const response = {
+//       filterProvider: 'Travel XS',
+//       filterDateRange: `${checkInDate} a ${checkOutDate}`,
+//       filterAdults: parseInt(adultCount),
+//       filterChilds: childsAges ? childsAges.split(',').length : 0,
+//       filterResults: filterResults
+//     }
+
+//     console.log('Resposta final preparada')
+//     res.json(response)
+//   } catch (error) {
+//     console.error('Erro ao processar a busca de acomodações:', error.message)
+//     res.status(500).json({
+//       error: 'Erro ao obter disponibilidade de hotéis',
+//       details: error.message
+//     })
+//   }
+// }
 
 // ========================================== CONNECT TRAVEL
 
