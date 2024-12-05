@@ -45,7 +45,6 @@ const discountRate = 7
 // ==================================== FILTER FORM
 
 const filterCountsLimit = 8
-const filterCountsLimits = 8
 
 // ==================================== EXPORTS
 
