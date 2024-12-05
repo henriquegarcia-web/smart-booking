@@ -18,15 +18,14 @@ const useUserProfile = (userId: string) => {
   })
 }
 
-const useAllUsersProfile = (userId: string) => {
+const useAllUsersProfile = (isAdminLogged: boolean) => {
   return useQuery<IUser[]>({
     queryKey: ['usersProfiles'],
     queryFn: async () => {
       const users = await fetchUsersProfiles()
       return users
     },
-    enabled: !!userId
-    // staleTime: 1000 * 60 * 5
+    enabled: isAdminLogged
   })
 }
 

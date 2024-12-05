@@ -70,7 +70,9 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { mutateAsync: login } = useLogin()
 
   const userData = useUserProfile(user?.id)
-  const usersData = useAllUsersProfile(user?.id)
+  const usersData = useAllUsersProfile(
+    (isUserLogged && user?.role === 'admin') || false
+  )
 
   const { mutateAsync: deleteUser } = useDeleteUser()
   const { mutateAsync: toggleUserBlock } = useToggleUserBlock()

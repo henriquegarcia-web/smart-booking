@@ -52,7 +52,7 @@ async function makeTravelXsRequest(
     const data = {
       adulto: adultCount,
       checkin: checkInDate,
-      noites: days,
+      noites: days.toString(),
       colo: '0',
       chd1: '0',
       chd2: '0',
@@ -142,14 +142,10 @@ async function makePriceRequest(
   servicePathsAsString,
   mealPath,
   persons,
-  checkin
+  checkin,
+  days
 ) {
   try {
-    console.log('Fazendo requisição price para:', {
-      servicePath,
-      mealPath,
-      checkin
-    })
     const response = await axios({
       method: 'post',
       url: 'https://travel3.novaxs.com.br/channel//b2b/price',
@@ -171,7 +167,7 @@ async function makePriceRequest(
           servicePath: servicePath,
           servicePathsAsString: servicePathsAsString,
           mealPath: mealPath,
-          modulesAmount: 1,
+          modulesAmount: parseInt(days),
           checkin: checkin,
           value: null,
           included: [],
@@ -179,7 +175,7 @@ async function makePriceRequest(
         }
       }
     })
-    console.log('Preço retornado:', response.data.value)
+    console.log('Preço retornado:', response.data)
     return response.data
   } catch (error) {
     console.error('Erro na requisição price:', error.message)
@@ -208,30 +204,14 @@ function compareMealTypeAndService(mealType, mealService) {
 
   switch (mealType) {
     case 'only_breakfast':
-      return (
-        mealServiceLower.includes('café') ||
-        mealServiceLower.includes('breakfast')
-      )
+      return mealServiceLower === 'café da manhã'
     case 'half_meal':
       return (
-        (mealServiceLower.includes('café') ||
-          mealServiceLower.includes('breakfast')) &&
-        (mealServiceLower.includes('jantar') ||
-          mealServiceLower.includes('dinner') ||
-          mealServiceLower.includes('almoço') ||
-          mealServiceLower.includes('lunch'))
+        mealServiceLower.includes('café da manhã e jantar') ||
+        mealServiceLower.includes('café da manhã e almoço')
       )
     case 'full_meal':
-      return (
-        mealServiceLower.includes('pensão completa') ||
-        mealServiceLower.includes('full board') ||
-        (mealServiceLower.includes('café') &&
-          mealServiceLower.includes('almoço') &&
-          mealServiceLower.includes('jantar')) ||
-        (mealServiceLower.includes('breakfast') &&
-          mealServiceLower.includes('lunch') &&
-          mealServiceLower.includes('dinner'))
-      )
+      return mealServiceLower === 'pensão completa'
     default:
       return false
   }
@@ -261,13 +241,13 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
     unavailable
   } = req.query
 
-  console.log('Iniciando busca de acomodações com parâmetros:', {
-    checkInDate,
-    checkOutDate,
-    days,
-    adultCount,
-    childsAges
-  })
+  // console.log('Iniciando busca de acomodações com parâmetros:', {
+  //   checkInDate,
+  //   checkOutDate,
+  //   days,
+  //   adultCount,
+  //   childsAges
+  // })
 
   if (!checkInDate || !checkOutDate || !days || !adultCount) {
     return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
@@ -303,7 +283,7 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
 
         if (validation) {
           const mealPath = `${hotelInfo.hotelPath}|${meal.pathAsString}`
-          const persons = Array(parseInt(adultCount))
+          const adultsAmount = Array(parseInt(adultCount))
             .fill()
             .map(() => ({
               id: 0,
@@ -312,6 +292,33 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
               mailing: false,
               forSave: true
             }))
+          const childsAmount = Array(Array(childsAges).length)
+            .fill()
+            .map(() => ({
+              id: 0,
+              name: '',
+              tag: 'Colo',
+              mailing: false,
+              forSave: true
+            }))
+
+          const persons = adultsAmount.concat(childsAmount)
+
+          console.log(childsAges, persons)
+
+          // console.log(
+          //   '==========================================================='
+          // )
+          // console.log('Fazendo requisição price para:', {
+          //   hotelName: hotelInfo.hotelName,
+          //   hotelPath: hotelInfo.hotelPath,
+          //   mealService: meal.service,
+          //   servicePath: hotelInfo.servicePath,
+          //   servicePathsAsString: hotelInfo.servicePathsAsString,
+          //   mealPath,
+          //   checkInDate,
+          //   persons
+          // })
 
           const priceData = await makePriceRequest(
             token,
@@ -320,7 +327,8 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
             hotelInfo.servicePathsAsString,
             mealPath,
             persons,
-            checkInDate
+            checkInDate,
+            days
           )
 
           if (

@@ -173,60 +173,63 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
       onFinish={handleSubmit(onSubmit)}
     >
       <S.MainFormWrapper>
-        <Controller
-          name="checkInOutDate"
-          control={control}
-          render={({ field }) => (
-            <Form.Item
-              name="checkInOutDate"
-              label="Entrada e Saída"
-              validateStatus={errors.checkInOutDate ? 'error' : ''}
-              help={errors?.checkInOutDate?.message}
-            >
-              <ConfigProvider locale={locale}>
-                <RangePicker
+        <S.FormInputDateRangeWrapper>
+          <Controller
+            name="checkInOutDate"
+            control={control}
+            render={({ field }) => (
+              <Form.Item
+                name="checkInOutDate"
+                label="Entrada e Saída"
+                validateStatus={errors.checkInOutDate ? 'error' : ''}
+                help={errors?.checkInOutDate?.message}
+              >
+                <ConfigProvider locale={locale}>
+                  <RangePicker
+                    {...field}
+                    format="DD/MM/YYYY"
+                    placeholder={['Data de entrada', 'Data de saída']}
+                    value={
+                      field.value?.map((date) =>
+                        date ? dayjs(date) : null
+                      ) as [Dayjs | null, Dayjs | null]
+                    }
+                    onChange={(dates) => {
+                      field.onChange(
+                        dates?.map((date) => date?.toDate() || null) || [
+                          null,
+                          null
+                        ]
+                      )
+                    }}
+                    disabled={filterResults?.isLoading || false}
+                  />
+                </ConfigProvider>
+              </Form.Item>
+            )}
+          />
+        </S.FormInputDateRangeWrapper>
+        <S.FormInputMealTypeWrapper>
+          <Controller
+            name="mealType"
+            control={control}
+            render={({ field }) => (
+              <Form.Item
+                label="Regime de pensão"
+                validateStatus={!!errors.mealType ? 'error' : ''}
+                help={errors?.mealType?.message || null}
+              >
+                <Select
                   {...field}
-                  format="DD/MM/YYYY"
-                  placeholder={['Data de entrada', 'Data de saída']}
-                  value={
-                    field.value?.map((date) => (date ? dayjs(date) : null)) as [
-                      Dayjs | null,
-                      Dayjs | null
-                    ]
-                  }
-                  onChange={(dates) => {
-                    field.onChange(
-                      dates?.map((date) => date?.toDate() || null) || [
-                        null,
-                        null
-                      ]
-                    )
-                  }}
+                  placeholder="Selecione uma opção"
+                  options={formattedPensionScheme}
+                  allowClear
                   disabled={filterResults?.isLoading || false}
                 />
-              </ConfigProvider>
-            </Form.Item>
-          )}
-        />
-        <Controller
-          name="mealType"
-          control={control}
-          render={({ field }) => (
-            <Form.Item
-              label="Regime de pensão"
-              validateStatus={!!errors.mealType ? 'error' : ''}
-              help={errors?.mealType?.message || null}
-            >
-              <Select
-                {...field}
-                placeholder="Selecione uma opção"
-                options={formattedPensionScheme}
-                allowClear
-                disabled={filterResults?.isLoading || false}
-              />
-            </Form.Item>
-          )}
-        />
+              </Form.Item>
+            )}
+          />
+        </S.FormInputMealTypeWrapper>
         {/* <Controller
           name="discountRate"
           control={control}
@@ -286,7 +289,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                 )}
               </S.ApartmentSectionHeader>
               <S.ApartmentSectionWrapper>
-                <S.AgesInputWrapper>
+                <S.FormInputWrapper>
                   <h3>Qtd. de adultos</h3>
 
                   <Controller
@@ -311,8 +314,8 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                       </Form.Item>
                     )}
                   />
-                </S.AgesInputWrapper>
-                <S.AgesInputWrapper>
+                </S.FormInputWrapper>
+                <S.FormInputWrapper>
                   <h3>Qtd. de crianças</h3>
 
                   <Controller
@@ -337,10 +340,10 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                       </Form.Item>
                     )}
                   />
-                </S.AgesInputWrapper>
+                </S.FormInputWrapper>
 
                 {childsInputCount > 0 ? (
-                  <S.AgesInputWrapper>
+                  <S.FormInputWrapper>
                     <h3>
                       {childsInputCount > 1 ? (
                         <>Idades das {childsInputCount} crianças</>
@@ -385,9 +388,9 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                         )}
                       />
                     ))}
-                  </S.AgesInputWrapper>
+                  </S.FormInputWrapper>
                 ) : (
-                  <S.AgesInputWrapper />
+                  <S.FormInputWrapper />
                 )}
               </S.ApartmentSectionWrapper>
             </S.ApartmentSection>

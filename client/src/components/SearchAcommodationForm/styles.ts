@@ -10,7 +10,6 @@ export const SearchAccommodationForm = styled(Form)`
 
   .ant-picker-range {
     width: 100%;
-    min-width: 300px;
   }
 
   .ant-form-item {
@@ -19,16 +18,24 @@ export const SearchAccommodationForm = styled(Form)`
         font-size: 13px;
       }
     }
-
-    .ant-input-number-group-wrapper {
-      width: 100%;
-    }
   }
 `
 
 export const MainFormWrapper = styled.div`
   display: flex;
   width: 100%;
+  column-gap: 10px;
+`
+
+export const FormInputDateRangeWrapper = styled.div`
+  display: flex;
+  width: calc((100% / 3) * 2);
+  column-gap: 10px;
+`
+
+export const FormInputMealTypeWrapper = styled.div`
+  display: flex;
+  width: calc((100% / 3) * 1);
   column-gap: 10px;
 `
 
@@ -66,7 +73,7 @@ export const ApartmentSectionWrapper = styled.div`
   margin-top: 20px;
 `
 
-export const AgesInputWrapper = styled.div`
+export const FormInputWrapper = styled.div`
   display: flex;
   flex-direction: column;
   row-gap: 6px;
