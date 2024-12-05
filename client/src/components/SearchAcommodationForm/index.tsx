@@ -86,7 +86,7 @@ const SearchFormDefaultValues: ISearchForm = {
   discountRate: undefined,
   apartments: [
     {
-      adultCount: 1,
+      adultCount: 2,
       childCount: 0,
       // seniorCount: 0,
       childrenAges: []
@@ -256,7 +256,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
           <Button
             disabled={filterResults?.isLoading || false}
             style={{ width: 'fit-content' }}
-            onClick={() => append({ adultCount: 1, childCount: 0 })}
+            onClick={() => append({ adultCount: 2, childCount: 0 })}
           >
             Adicionar Apartamento
           </Button>
