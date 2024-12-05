@@ -11,7 +11,6 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // console.log(origin, allowedOrigins.includes(origin))
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true)
     } else {
