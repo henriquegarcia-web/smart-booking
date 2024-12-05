@@ -1,6 +1,10 @@
 import styled from 'styled-components'
 import { Form } from 'antd'
-import { responsiveTablet, Sizes } from '@/utils/styles/globals'
+import {
+  responsiveSemiMobile,
+  responsiveTablet,
+  Sizes
+} from '@/utils/styles/globals'
 
 export const SearchAccommodationForm = styled(Form)`
   display: flex;
@@ -26,22 +30,30 @@ export const MainFormWrapper = styled.div`
   width: 100%;
   column-gap: 10px;
 
-  /* @media screen and (min-width: ${responsiveTablet}) {
+  @media screen and (max-width: ${responsiveSemiMobile}) {
     flex-direction: column;
     row-gap: 10px;
-  } */
+  }
 `
 
 export const FormInputDateRangeWrapper = styled.div`
   display: flex;
   width: calc((100% / 3) * 2);
   column-gap: 10px;
+
+  @media screen and (max-width: ${responsiveSemiMobile}) {
+    width: 100%;
+  }
 `
 
 export const FormInputMealTypeWrapper = styled.div`
   display: flex;
   width: calc((100% / 3) * 1);
   column-gap: 10px;
+
+  @media screen and (max-width: ${responsiveSemiMobile}) {
+    width: 100%;
+  }
 `
 
 export const ApartmentsFormWrapper = styled.div`
@@ -76,6 +88,11 @@ export const ApartmentSectionWrapper = styled.div`
   column-gap: 10px;
   width: 100%;
   margin-top: 20px;
+
+  @media screen and (max-width: ${responsiveSemiMobile}) {
+    flex-direction: column;
+    row-gap: 12px;
+  }
 `
 
 export const FormInputWrapper = styled.div`
@@ -89,6 +106,14 @@ export const FormInputWrapper = styled.div`
     font-size: 13px;
     line-height: 13px;
     font-weight: 400;
+  }
+
+  @media screen and (max-width: ${responsiveSemiMobile}) {
+    width: 100%;
+
+    h3 {
+      margin-bottom: 0;
+    }
   }
 `
 

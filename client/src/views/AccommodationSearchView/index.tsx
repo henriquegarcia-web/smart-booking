@@ -49,7 +49,7 @@ interface IFilterData {
 
 const columns: TableProps<IFilterData>['columns'] = [
   {
-    title: 'Provedor',
+    title: 'Portal',
     dataIndex: 'accommodationProvider',
     key: 'accommodationProvider',
     render: (tag) => <Tag>{tag}</Tag>
@@ -106,8 +106,6 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
     }))
   }, [selectedDiscount, filterResults])
 
-  // console.log(filterResults)
-
   const formattedDiscountRates = Array.from(
     { length: discountRate },
     (_, index) => ({
@@ -127,8 +125,9 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
       let content = `${data.filterDateRange}${
         selectedDiscount > 0 ? `/${selectedDiscount}` : ''
       }\n`
-      content += `${data.filterAdults} adultos\n`
-      content += `${data.filterChilds} crianças\n\n`
+      content += `${data.filterAdults} adulto(s)\n`
+      content +=
+        data.filterChilds > 0 ? `${data.filterChilds} criança(s)\n\n` : '\n'
 
       data.filterResults.forEach((accommodation) => {
         content += `${accommodation.accommodationName}\n`

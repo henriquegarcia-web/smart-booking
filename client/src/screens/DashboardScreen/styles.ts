@@ -1,5 +1,10 @@
 import styled from 'styled-components'
-import { Screen, Sizes } from '@/utils/styles/globals'
+import {
+  responsiveDesktop,
+  responsiveTablet,
+  Screen,
+  Sizes
+} from '@/utils/styles/globals'
 
 export const DashboardScreen = styled(Screen)`
   display: flex;
@@ -13,6 +18,14 @@ export const DashboardMenu = styled.div<{ opened: number }>`
   width: ${({ opened }) =>
     opened ? Sizes.dashboard.menuOpened : Sizes.dashboard.menu};
   transition: 0.3s;
+
+  @media screen and (max-width: ${responsiveTablet}) {
+    z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+  }
 `
 
 export const DashboardMenuLogo = styled.div<{ opened: number }>`
@@ -58,6 +71,11 @@ export const DashboardContent = styled.div<{ opened: number }>`
       ? `calc(100% - ${Sizes.dashboard.menuOpened})`
       : `calc(100% - ${Sizes.dashboard.menu})`};
   height: 100%;
+
+  @media screen and (max-width: ${responsiveTablet}) {
+    width: 100%;
+    margin-left: ${Sizes.dashboard.menu};
+  }
 `
 
 export const DashboardHeader = styled.div`

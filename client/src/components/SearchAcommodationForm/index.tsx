@@ -290,7 +290,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
               </S.ApartmentSectionHeader>
               <S.ApartmentSectionWrapper>
                 <S.FormInputWrapper>
-                  <h3>Qtd. de adultos</h3>
+                  <h3>Qtde de adultos</h3>
 
                   <Controller
                     name={`apartments.${index}.adultCount`}
@@ -316,7 +316,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                   />
                 </S.FormInputWrapper>
                 <S.FormInputWrapper>
-                  <h3>Qtd. de crianças</h3>
+                  <h3>Qtde de crianças</h3>
 
                   <Controller
                     name={`apartments.${index}.childCount`}

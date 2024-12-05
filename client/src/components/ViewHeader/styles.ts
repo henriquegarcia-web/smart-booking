@@ -8,7 +8,7 @@ export const ViewHeader = styled.div`
   width: 100%;
   padding-bottom: ${Sizes.spacing};
 
-  @media screen and (min-width: ${responsiveTablet}) {
+  @media screen and (max-width: ${responsiveTablet}) {
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;

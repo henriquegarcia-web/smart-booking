@@ -3,6 +3,7 @@ import { Form } from 'antd'
 
 export const responsiveDesktop = '1000px'
 export const responsiveTablet = '760px'
+export const responsiveSemiMobile = '680px'
 export const responsiveMobile = '500px'
 
 export const Sizes = {

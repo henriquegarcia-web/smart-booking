@@ -34,7 +34,10 @@ const DashboardScreen = ({}: IDashboardScreen) => {
     <S.DashboardScreen style={{ backgroundColor: token.colorBgBase }}>
       <S.DashboardMenu
         opened={isSideMenuOpen ? 1 : 0}
-        style={{ borderRight: `1px solid ${token.colorBorder}` }}
+        style={{
+          backgroundColor: token.colorBgBase,
+          borderRight: `1px solid ${token.colorBorder}`
+        }}
       >
         <S.DashboardMenuLogo
           opened={isSideMenuOpen ? 1 : 0}
