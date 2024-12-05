@@ -5,6 +5,9 @@ import routes from './routes/index.js'
 
 const allowedOrigins = [
   'https://vmcot-client.vercel.app',
+  'http://vmcot-client.vercel.app',
+  'https://18.118.128.178',
+  'http://18.118.128.178',
   'http://localhost:5173',
   process.env.CLIENT_CORS_ALLOW_URL
 ]
