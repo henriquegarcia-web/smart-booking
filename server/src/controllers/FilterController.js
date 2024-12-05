@@ -591,3 +591,76 @@ export const findAccommodationsOnConnectTravel = async (req, res) => {
     })
   }
 }
+
+/*
+
+server {
+  listen 80;
+  server_name www.cotacoes.vilamiraturismo.com.br cotacoes.vilamiraturismo.com.br;
+
+  location / {
+    return 301 https://$host$request_uri;
+  }
+}
+
+server {
+  listen 443 ssl;
+  server_name www.cotacoes.vilamiraturismo.com.br cotacoes.vilamiraturismo.com.br;
+
+  ssl_certificate /etc/letsencrypt/live/www.cotacoes.vilamiraturismo.com.br/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/www.cotacoes.vilamiraturismo.com.br/privkey.pem;
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_ciphers HIGH:!aNULL:!MD5;
+  ssl_prefer_server_ciphers on;
+
+  location / {
+    proxy_pass http://localhost:5000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+  }
+
+  location /api {
+    proxy_pass http://localhost:5000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+  }
+}
+
+server {
+  listen 80;
+  server_name www.cotacoes.vilamiraturismo.com.br cotacoes.vilamiraturismo.com.br;
+
+  location / {
+    return 301 https://$host$request_uri;
+  }
+}
+
+server {
+  listen 443 ssl;
+  server_name www.cotacoes.vilamiraturismo.com.br cotacoes.vilamiraturismo.com.br;
+
+  ssl_certificate /etc/letsencrypt/live/www.cotacoes.vilamiraturismo.com.br/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/www.cotacoes.vilamiraturismo.com.br/privkey.pem;
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_ciphers HIGH:!aNULL:!MD5;
+  ssl_prefer_server_ciphers on;
+
+  location /api {
+    proxy_pass http://localhost:5000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+  }
+}
+
+
+
+*/
