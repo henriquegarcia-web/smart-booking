@@ -292,19 +292,23 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
               mailing: false,
               forSave: true
             }))
-          const childsAmount = Array(Array(childsAges).length)
-            .fill()
-            .map(() => ({
-              id: 0,
-              name: '',
-              tag: 'Colo',
-              mailing: false,
-              forSave: true
-            }))
+          const childsAmount = !!childsAges
+            ? Array(Array(childsAges).length)
+                .fill()
+                .map(() => ({
+                  id: 0,
+                  name: '',
+                  tag: 'Colo',
+                  mailing: false,
+                  forSave: true
+                }))
+            : null
 
-          const persons = adultsAmount.concat(childsAmount)
+          const persons = childsAges
+            ? adultsAmount.concat(childsAmount)
+            : adultsAmount
 
-          console.log(childsAges, persons)
+          console.log('=================>', childsAges, persons)
 
           // console.log(
           //   '==========================================================='
