@@ -27,10 +27,10 @@ export interface IAccommodation {
   accommodationName: string
   accommodationPrice: string
   accommodationMeal: string
+  accommodationProvider: string
 }
 
 export interface IFilterResultsData {
-  filterProvider: string
   filterAdults: number
   filterChilds: number
   filterDateRange: string

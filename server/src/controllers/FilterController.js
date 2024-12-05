@@ -5,7 +5,37 @@ dotenv.config()
 
 // ========================================== TRAVELXS
 
-const authenticateTravelXs = async () => {
+// const authenticateTravelXs = async () => {
+//   try {
+//     const response = await axios({
+//       method: 'post',
+//       url: 'https://travel3.novaxs.com.br/channel//login/login',
+//       headers: {
+//         accept: 'application/json, text/plain, */*',
+//         'content-type': 'application/json;charset=UTF-8',
+//         origin: 'https://travelxs.websiteseguro.com',
+//         referer: 'https://travelxs.websiteseguro.com/',
+//         'user-agent':
+//           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 OPR/114.0.0.0'
+//       },
+//       data: {
+//         login: process.env.TRAVELXS_FIRST_USER,
+//         password: process.env.TRAVELXS_PASSWORD
+//       }
+//     })
+
+//     console.log(
+//       'Token de autenticação obtido:',
+//       response.headers['x-token'].substring(0, 10) + '...'
+//     )
+//     return response.headers['x-token']
+//   } catch (error) {
+//     console.error('Erro na autenticação:', error.message)
+//     throw error
+//   }
+// }
+
+const authenticateTravelXs = async (user, password) => {
   try {
     const response = await axios({
       method: 'post',
@@ -19,13 +49,13 @@ const authenticateTravelXs = async () => {
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 OPR/114.0.0.0'
       },
       data: {
-        login: process.env.TRAVELXS_FIRST_USER,
-        password: process.env.TRAVELXS_PASSWORD
+        login: user,
+        password: password
       }
     })
 
     console.log(
-      'Token de autenticação obtido:',
+      `Token de autenticação obtido para ${user}:`,
       response.headers['x-token'].substring(0, 10) + '...'
     )
     return response.headers['x-token']
@@ -42,7 +72,8 @@ const makeTravelXsRequest = async (
   days,
   adultCount,
   childsAges,
-  unavailable = false
+  unavailable = false,
+  accommodationProvider
 ) => {
   try {
     const formattedChildsAges = childsAges
@@ -56,8 +87,10 @@ const makeTravelXsRequest = async (
       colo: '0',
       chd1: '0',
       chd2: '0',
-      agencyPath: 'agencies/1996',
-      toAgencyPath: 'agencies/24710',
+      agencyPath:
+        accommodationProvider === 'enjoy' ? 'agencies/4246' : 'agencies/1996',
+      toAgencyPath:
+        accommodationProvider === 'enjoy' ? 'agencies/24712' : 'agencies/24710',
       unavailable: unavailable
     }
 
@@ -213,6 +246,135 @@ const getMealTypeDescription = (mealType) => {
   }
 }
 
+// Função separada para buscar os dados de hospedagem
+const fetchAccommodationsData = async (
+  token,
+  checkInDate,
+  checkOutDate,
+  days,
+  adultCount,
+  childsAges,
+  mealType,
+  unavailable,
+  accommodationProvider
+) => {
+  const hoteisData = await makeTravelXsRequest(
+    token,
+    checkInDate,
+    checkOutDate,
+    days,
+    adultCount,
+    childsAges,
+    unavailable,
+    accommodationProvider
+  )
+
+  console.log('Dados de hotéis recebidos:', hoteisData.length)
+  const filterResults = []
+
+  for (const hotel of hoteisData) {
+    let lowestPrice = null
+    let bestOption = null
+
+    for (const roomOption of hotel.result) {
+      const mealPathData = await makeMealPathRequest(
+        token,
+        roomOption.hotelPath,
+        checkInDate,
+        checkOutDate
+      )
+
+      for (const mealOption of mealPathData) {
+        const validation = compareMealTypeAndService(
+          mealType,
+          mealOption.service
+        )
+
+        if (validation) {
+          const mealPath = `${roomOption.hotelPath}|${mealOption.pathAsString}`
+          const adultsAmount = Array(parseInt(adultCount))
+            .fill()
+            .map(() => ({
+              id: 0,
+              name: '',
+              tag: 'Adulto',
+              mailing: false,
+              forSave: true
+            }))
+          const childsAmount = !!childsAges
+            ? Array(Array(childsAges).length)
+                .fill()
+                .map(() => ({
+                  id: 0,
+                  name: '',
+                  tag: 'Colo',
+                  mailing: false,
+                  forSave: true
+                }))
+            : null
+
+          const persons = childsAges
+            ? adultsAmount.concat(childsAmount)
+            : adultsAmount
+
+          const priceData = await makePriceRequest(
+            token,
+            accommodationProvider === 'enjoy'
+              ? 'agencies/4246'
+              : 'agencies/1996',
+            roomOption.servicePath,
+            roomOption.servicePathsAsString,
+            mealPath,
+            persons,
+            checkInDate,
+            days
+          )
+
+          if (!!priceData && !!priceData?.value) {
+            const numericPrice = parseFloat(priceData.value.replace(',', ''))
+
+            if (lowestPrice === null || numericPrice < lowestPrice) {
+              lowestPrice = numericPrice
+              bestOption = {
+                accommodationName: roomOption.hotelName,
+                accommodationPrice: priceData.value,
+                accommodationMeal: getMealTypeDescription(mealType),
+                accommodationProvider: accommodationProvider
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (bestOption) {
+      filterResults.push(bestOption)
+    }
+  }
+
+  return filterResults
+}
+
+const combineAndFilterResults = (resultsA, resultsB) => {
+  const combinedResults = [...resultsA, ...resultsB]
+  const filteredResults = {}
+
+  for (const result of combinedResults) {
+    const key = `${result.accommodationName}|${result.accommodationMeal}`
+    const current = filteredResults[key]
+
+    if (
+      !current ||
+      parseFloat(result.accommodationPrice) <
+        parseFloat(current.accommodationPrice)
+    ) {
+      filteredResults[key] = result
+    }
+  }
+
+  return Object.values(filteredResults)
+}
+
 export const findAccommodationsOnTravelXs = async (req, res) => {
   const {
     checkInDate,
@@ -229,105 +391,51 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
   }
 
   try {
-    const token = await authenticateTravelXs()
-    const hoteisData = await makeTravelXsRequest(
-      token,
+    // Primeiro login e busca com TRAVELXS_FIRST_USER
+    const tokenFirstUser = await authenticateTravelXs(
+      process.env.TRAVELXS_FIRST_USER,
+      process.env.TRAVELXS_PASSWORD
+    )
+    const resultsFirstUser = await fetchAccommodationsData(
+      tokenFirstUser,
       checkInDate,
       checkOutDate,
       days,
       adultCount,
       childsAges,
-      unavailable
+      mealType,
+      unavailable,
+      'hot_beach'
     )
 
-    console.log('Dados de hotéis recebidos:', hoteisData.length)
-    const filterResults = []
+    // Segundo login e busca com TRAVELXS_SECOND_USER
+    const tokenSecondUser = await authenticateTravelXs(
+      process.env.TRAVELXS_SECOND_USER,
+      process.env.TRAVELXS_PASSWORD
+    )
+    const resultsSecondUser = await fetchAccommodationsData(
+      tokenSecondUser,
+      checkInDate,
+      checkOutDate,
+      days,
+      adultCount,
+      childsAges,
+      mealType,
+      unavailable,
+      'enjoy'
+    )
 
-    for (const hotel of hoteisData) {
-      let lowestPrice = null
-      let bestOption = null
-
-      for (const roomOption of hotel.result) {
-        const mealPathData = await makeMealPathRequest(
-          token,
-          roomOption.hotelPath,
-          checkInDate,
-          checkOutDate
-        )
-
-        for (const mealOption of mealPathData) {
-          const validation = compareMealTypeAndService(
-            mealType,
-            mealOption.service
-          )
-
-          if (validation) {
-            const mealPath = `${roomOption.hotelPath}|${mealOption.pathAsString}`
-            const adultsAmount = Array(parseInt(adultCount))
-              .fill()
-              .map(() => ({
-                id: 0,
-                name: '',
-                tag: 'Adulto',
-                mailing: false,
-                forSave: true
-              }))
-            const childsAmount = !!childsAges
-              ? Array(Array(childsAges).length)
-                  .fill()
-                  .map(() => ({
-                    id: 0,
-                    name: '',
-                    tag: 'Colo',
-                    mailing: false,
-                    forSave: true
-                  }))
-              : null
-
-            const persons = childsAges
-              ? adultsAmount.concat(childsAmount)
-              : adultsAmount
-
-            const priceData = await makePriceRequest(
-              token,
-              'agencies/1996',
-              roomOption.servicePath,
-              roomOption.servicePathsAsString,
-              mealPath,
-              persons,
-              checkInDate,
-              days
-            )
-
-            if (!!priceData && !!priceData?.value) {
-              const numericPrice = parseFloat(priceData.value.replace(',', ''))
-
-              if (lowestPrice === null || numericPrice < lowestPrice) {
-                lowestPrice = numericPrice
-                bestOption = {
-                  accommodationName: roomOption.hotelName,
-                  accommodationPrice: priceData.value,
-                  accommodationMeal: getMealTypeDescription(mealType)
-                }
-              }
-            }
-          }
-        }
-      }
-
-      if (bestOption) {
-        filterResults.push(bestOption)
-      }
-    }
-
-    console.log('Total de resultados filtrados:', filterResults.length)
+    // Combina os resultados dos dois logins e filtra os itens únicos com o menor preço
+    const finalResults = combineAndFilterResults(
+      resultsFirstUser,
+      resultsSecondUser
+    )
 
     const response = {
-      filterProvider: 'Portal Hot Beach',
       filterDateRange: `${checkInDate} a ${checkOutDate}`,
       filterAdults: parseInt(adultCount),
       filterChilds: childsAges ? childsAges.split(',').length : 0,
-      filterResults: filterResults
+      filterResults: finalResults
     }
 
     console.log('Resposta final preparada')
@@ -340,6 +448,134 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
     })
   }
 }
+
+// export const findAccommodationsOnTravelXs = async (req, res) => {
+//   const {
+//     checkInDate,
+//     checkOutDate,
+//     days,
+//     adultCount,
+//     childsAges,
+//     mealType,
+//     unavailable
+//   } = req.query
+
+//   if (!checkInDate || !checkOutDate || !days || !adultCount) {
+//     return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
+//   }
+
+//   try {
+//     const token = await authenticateTravelXs()
+//     const hoteisData = await makeTravelXsRequest(
+//       token,
+//       checkInDate,
+//       checkOutDate,
+//       days,
+//       adultCount,
+//       childsAges,
+//       unavailable
+//     )
+
+//     console.log('Dados de hotéis recebidos:', hoteisData.length)
+//     const filterResults = []
+
+//     for (const hotel of hoteisData) {
+//       let lowestPrice = null
+//       let bestOption = null
+
+//       for (const roomOption of hotel.result) {
+//         const mealPathData = await makeMealPathRequest(
+//           token,
+//           roomOption.hotelPath,
+//           checkInDate,
+//           checkOutDate
+//         )
+
+//         for (const mealOption of mealPathData) {
+//           const validation = compareMealTypeAndService(
+//             mealType,
+//             mealOption.service
+//           )
+
+//           if (validation) {
+//             const mealPath = `${roomOption.hotelPath}|${mealOption.pathAsString}`
+//             const adultsAmount = Array(parseInt(adultCount))
+//               .fill()
+//               .map(() => ({
+//                 id: 0,
+//                 name: '',
+//                 tag: 'Adulto',
+//                 mailing: false,
+//                 forSave: true
+//               }))
+//             const childsAmount = !!childsAges
+//               ? Array(Array(childsAges).length)
+//                   .fill()
+//                   .map(() => ({
+//                     id: 0,
+//                     name: '',
+//                     tag: 'Colo',
+//                     mailing: false,
+//                     forSave: true
+//                   }))
+//               : null
+
+//             const persons = childsAges
+//               ? adultsAmount.concat(childsAmount)
+//               : adultsAmount
+
+//             const priceData = await makePriceRequest(
+//               token,
+//               'agencies/1996', // Será 'agencies/4246' para o TRAVELXS_SECOND_USER
+//               roomOption.servicePath,
+//               roomOption.servicePathsAsString,
+//               mealPath,
+//               persons,
+//               checkInDate,
+//               days
+//             )
+
+//             if (!!priceData && !!priceData?.value) {
+//               const numericPrice = parseFloat(priceData.value.replace(',', ''))
+
+//               if (lowestPrice === null || numericPrice < lowestPrice) {
+//                 lowestPrice = numericPrice
+//                 bestOption = {
+//                   accommodationName: roomOption.hotelName,
+//                   accommodationPrice: priceData.value,
+//                   accommodationMeal: getMealTypeDescription(mealType),
+//                   accommodationProvider: 'Portal Hot Beach'
+//                 }
+//               }
+//             }
+//           }
+//         }
+//       }
+
+//       if (bestOption) {
+//         filterResults.push(bestOption)
+//       }
+//     }
+
+//     console.log('Total de resultados filtrados:', filterResults.length)
+
+//     const response = {
+//       filterDateRange: `${checkInDate} a ${checkOutDate}`,
+//       filterAdults: parseInt(adultCount),
+//       filterChilds: childsAges ? childsAges.split(',').length : 0,
+//       filterResults: filterResults
+//     }
+
+//     console.log('Resposta final preparada')
+//     res.json(response)
+//   } catch (error) {
+//     console.error('Erro ao processar a busca de acomodações:', error.message)
+//     res.status(500).json({
+//       error: 'Erro ao obter disponibilidade de hotéis',
+//       details: error.message
+//     })
+//   }
+// }
 
 // ========================================== CONNECT TRAVEL
 

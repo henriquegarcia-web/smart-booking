@@ -47,12 +47,25 @@ interface IFilterData {
   accommodationMeal: string
 }
 
+const formatProviderTag = (providerId: string) => {
+  switch (providerId) {
+    case 'hot_beach':
+      return <Tag color="#0D4FAD">Portal Hot Beach</Tag>
+    case 'enjoy':
+      return <Tag color="#52B7C1">Portal Enjoy</Tag>
+    case 'connect_travel':
+      return <Tag color="#9100ff">Portal Connect</Tag>
+    default:
+      return ''
+  }
+}
+
 const columns: TableProps<IFilterData>['columns'] = [
   {
     title: 'Portal',
     dataIndex: 'accommodationProvider',
     key: 'accommodationProvider',
-    render: (tag) => <Tag>{tag}</Tag>
+    render: (tag) => formatProviderTag(tag)
   },
   {
     title: 'Hospedagem',
@@ -95,7 +108,7 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
 
     return filterResults.data.filterResults.map((accommodation, index) => ({
       key: `${accommodation.accommodationName}-${accommodation.accommodationPrice}-${accommodation.accommodationMeal}-${index}`,
-      accommodationProvider: filterResults.data.filterProvider || '',
+      accommodationProvider: accommodation.accommodationProvider || '',
       accommodationName: accommodation?.accommodationName || '',
       accommodationPrice:
         applyDiscount(
