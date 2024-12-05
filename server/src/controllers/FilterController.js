@@ -308,22 +308,6 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
             ? adultsAmount.concat(childsAmount)
             : adultsAmount
 
-          console.log('=================>', childsAges, persons)
-
-          // console.log(
-          //   '==========================================================='
-          // )
-          // console.log('Fazendo requisição price para:', {
-          //   hotelName: hotelInfo.hotelName,
-          //   hotelPath: hotelInfo.hotelPath,
-          //   mealService: meal.service,
-          //   servicePath: hotelInfo.servicePath,
-          //   servicePathsAsString: hotelInfo.servicePathsAsString,
-          //   mealPath,
-          //   checkInDate,
-          //   persons
-          // })
-
           const priceData = await makePriceRequest(
             token,
             'agencies/1996',

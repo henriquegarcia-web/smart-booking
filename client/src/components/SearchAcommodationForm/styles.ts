@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import { Form } from 'antd'
-import { Sizes } from '@/utils/styles/globals'
+import { responsiveTablet, Sizes } from '@/utils/styles/globals'
 
 export const SearchAccommodationForm = styled(Form)`
   display: flex;
@@ -25,6 +25,11 @@ export const MainFormWrapper = styled.div`
   display: flex;
   width: 100%;
   column-gap: 10px;
+
+  /* @media screen and (min-width: ${responsiveTablet}) {
+    flex-direction: column;
+    row-gap: 10px;
+  } */
 `
 
 export const FormInputDateRangeWrapper = styled.div`

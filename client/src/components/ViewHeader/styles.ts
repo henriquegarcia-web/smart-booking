@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { Sizes } from '@/utils/styles/globals'
+import { responsiveTablet, Sizes } from '@/utils/styles/globals'
 
 export const ViewHeader = styled.div`
   display: flex;
@@ -7,6 +7,13 @@ export const ViewHeader = styled.div`
   align-items: center;
   width: 100%;
   padding-bottom: ${Sizes.spacing};
+
+  @media screen and (min-width: ${responsiveTablet}) {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    row-gap: 20px;
+  }
 `
 
 export const ViewHeaderLabels = styled.div`

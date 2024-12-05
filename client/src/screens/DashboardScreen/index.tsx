@@ -14,8 +14,8 @@ const DashboardScreen = ({}: IDashboardScreen) => {
   const { token } = theme.useToken()
   const { user } = useAuth()
 
-  const [showLogo, setShowLogo] = useState(true)
-  const [isSideMenuOpen, setIsSideMenuOpen] = useState(true)
+  const [showLogo, setShowLogo] = useState(false)
+  const [isSideMenuOpen, setIsSideMenuOpen] = useState(false)
   const [selectedMenu, setSelectedMenu] = useState(menusData[0])
 
   const handleToggleSideMenu = () => setIsSideMenuOpen(!isSideMenuOpen)
