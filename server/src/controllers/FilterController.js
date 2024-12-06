@@ -54,10 +54,10 @@ const authenticateTravelXs = async (user, password) => {
       }
     })
 
-    console.log(
-      `Token de autenticação obtido para ${user}:`,
-      response.headers['x-token'].substring(0, 10) + '...'
-    )
+    // console.log(
+    //   `Token de autenticação obtido para ${user}:`,
+    //   response.headers['x-token'].substring(0, 10) + '...'
+    // )
     return response.headers['x-token']
   } catch (error) {
     console.error('Erro na autenticação:', error.message)
@@ -98,12 +98,12 @@ const makeTravelXsRequest = async (
       data.chdsAges = formattedChildsAges
     }
 
-    console.log('Fazendo requisição para hoteisAvailabilityAndPrice:', {
-      checkInDate,
-      checkOutDate,
-      days,
-      adultCount
-    })
+    // console.log('Fazendo requisição para hoteisAvailabilityAndPrice:', {
+    //   checkInDate,
+    //   checkOutDate,
+    //   days,
+    //   adultCount
+    // })
     const response = await axios({
       method: 'post',
       url: 'https://travel3.novaxs.com.br/channel/b2b/hoteisAvailabilityAndPrice',
@@ -121,7 +121,7 @@ const makeTravelXsRequest = async (
       data: data
     })
 
-    console.log('Número de hotéis retornados:', response.data.length)
+    // console.log('Número de hotéis retornados:', response.data.length)
     return response.data
   } catch (error) {
     console.error(
@@ -139,7 +139,7 @@ const makeMealPathRequest = async (
   checkOutDate
 ) => {
   try {
-    console.log('Fazendo requisição mealPath para hotel:', hotelPath)
+    // console.log('Fazendo requisição mealPath para hotel:', hotelPath)
     const response = await axios({
       method: 'post',
       url: 'https://travel3.novaxs.com.br/channel//b2b/mealPath',
@@ -160,7 +160,7 @@ const makeMealPathRequest = async (
         endDate: checkOutDate
       }
     })
-    console.log('Número de opções de refeição:', response.data.length)
+    // console.log('Número de opções de refeição:', response.data.length)
     return response.data
   } catch (error) {
     console.error('Erro na requisição mealPath:', error.message)
@@ -208,7 +208,7 @@ const makePriceRequest = async (
         }
       }
     })
-    console.log('Preço retornado:', response.data)
+    // console.log('Preço retornado:', response.data)
     return response.data
   } catch (error) {
     console.error('Erro na requisição price:', error.message)
@@ -269,11 +269,11 @@ const fetchAccommodationsData = async (
     accommodationProvider
   )
 
-  console.log('Dados de hotéis recebidos:', hoteisData.length)
+  console.log('Dados de hotéis ANTES do filtro:', hoteisData.length)
   const filterResults = []
 
   for (const hotel of hoteisData) {
-    let lowestPrice = null
+    let lowestPrice = Infinity
     let bestOption = null
 
     for (const roomOption of hotel.result) {
@@ -301,8 +301,8 @@ const fetchAccommodationsData = async (
               mailing: false,
               forSave: true
             }))
-          const childsAmount = !!childsAges
-            ? Array(Array(childsAges).length)
+          const childsAmount = childsAges
+            ? Array(childsAges.length)
                 .fill()
                 .map(() => ({
                   id: 0,
@@ -311,11 +311,9 @@ const fetchAccommodationsData = async (
                   mailing: false,
                   forSave: true
                 }))
-            : null
+            : []
 
-          const persons = childsAges
-            ? adultsAmount.concat(childsAmount)
-            : adultsAmount
+          const persons = [...adultsAmount, ...childsAmount]
 
           const priceData = await makePriceRequest(
             token,
@@ -330,10 +328,11 @@ const fetchAccommodationsData = async (
             days
           )
 
-          if (!!priceData && !!priceData?.value) {
+          if (priceData?.value) {
             const numericPrice = parseFloat(priceData.value.replace(',', ''))
+            // console.log(`${roomOption.hotelName}: `, numericPrice)
 
-            if (lowestPrice === null || numericPrice < lowestPrice) {
+            if (numericPrice < lowestPrice) {
               lowestPrice = numericPrice
               bestOption = {
                 accommodationName: roomOption.hotelName,
@@ -352,28 +351,142 @@ const fetchAccommodationsData = async (
     }
   }
 
+  console.log('Dados de hotéis DEPOIS do filtro:', filterResults.length)
+
   return filterResults
 }
 
-const combineAndFilterResults = (resultsA, resultsB) => {
-  const combinedResults = [...resultsA, ...resultsB]
-  const filteredResults = {}
+// const fetchAccommodationsData = async (
+//   token,
+//   checkInDate,
+//   checkOutDate,
+//   days,
+//   adultCount,
+//   childsAges,
+//   mealType,
+//   unavailable,
+//   accommodationProvider
+// ) => {
+//   const hoteisData = await makeTravelXsRequest(
+//     token,
+//     checkInDate,
+//     checkOutDate,
+//     days,
+//     adultCount,
+//     childsAges,
+//     unavailable,
+//     accommodationProvider
+//   )
 
-  for (const result of combinedResults) {
-    const key = `${result.accommodationName}|${result.accommodationMeal}`
-    const current = filteredResults[key]
+//   console.log('Dados de hotéis ANTES do filtro:', hoteisData.length)
+//   const filterResults = []
 
-    if (
-      !current ||
-      parseFloat(result.accommodationPrice) <
-        parseFloat(current.accommodationPrice)
-    ) {
-      filteredResults[key] = result
-    }
-  }
+//   for (const hotel of hoteisData) {
+//     let lowestPrice = null
+//     let bestOption = null
 
-  return Object.values(filteredResults)
-}
+//     for (const roomOption of hotel.result) {
+//       const mealPathData = await makeMealPathRequest(
+//         token,
+//         roomOption.hotelPath,
+//         checkInDate,
+//         checkOutDate
+//       )
+
+//       for (const mealOption of mealPathData) {
+//         const validation = compareMealTypeAndService(
+//           mealType,
+//           mealOption.service
+//         )
+
+//         if (validation) {
+//           const mealPath = `${roomOption.hotelPath}|${mealOption.pathAsString}`
+//           const adultsAmount = Array(parseInt(adultCount))
+//             .fill()
+//             .map(() => ({
+//               id: 0,
+//               name: '',
+//               tag: 'Adulto',
+//               mailing: false,
+//               forSave: true
+//             }))
+//           const childsAmount = !!childsAges
+//             ? Array(Array(childsAges).length)
+//                 .fill()
+//                 .map(() => ({
+//                   id: 0,
+//                   name: '',
+//                   tag: 'Colo',
+//                   mailing: false,
+//                   forSave: true
+//                 }))
+//             : null
+
+//           const persons = childsAges
+//             ? adultsAmount.concat(childsAmount)
+//             : adultsAmount
+
+//           const priceData = await makePriceRequest(
+//             token,
+//             accommodationProvider === 'enjoy'
+//               ? 'agencies/4246'
+//               : 'agencies/1996',
+//             roomOption.servicePath,
+//             roomOption.servicePathsAsString,
+//             mealPath,
+//             persons,
+//             checkInDate,
+//             days
+//           )
+
+//           if (!!priceData && !!priceData?.value) {
+//             const numericPrice = parseFloat(priceData.value.replace(',', ''))
+
+//             console.log(`${roomOption.hotelName}: `, numericPrice)
+
+//             if (lowestPrice === null || numericPrice < lowestPrice) {
+//               lowestPrice = numericPrice
+//               bestOption = {
+//                 accommodationName: roomOption.hotelName,
+//                 accommodationPrice: priceData.value,
+//                 accommodationMeal: getMealTypeDescription(mealType),
+//                 accommodationProvider: accommodationProvider
+//               }
+//             }
+//           }
+//         }
+//       }
+//     }
+
+//     if (bestOption) {
+//       filterResults.push(bestOption)
+//     }
+//   }
+
+//   console.log('Dados de hotéis DEPOIS do filtro:', filterResults.length)
+
+//   return filterResults
+// }
+
+// const combineAndFilterResults = (resultsA, resultsB) => {
+//   const combinedResults = [...resultsA, ...resultsB]
+//   const filteredResults = {}
+
+//   for (const result of combinedResults) {
+//     const key = `${result.accommodationName}|${result.accommodationMeal}`
+//     const current = filteredResults[key]
+
+//     if (
+//       !current ||
+//       parseFloat(result.accommodationPrice) <
+//         parseFloat(current.accommodationPrice)
+//     ) {
+//       filteredResults[key] = result
+//     }
+//   }
+
+//   return Object.values(filteredResults)
+// }
 
 export const findAccommodationsOnTravelXs = async (req, res) => {
   const {
@@ -426,10 +539,12 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
     )
 
     // Combina os resultados dos dois logins e filtra os itens únicos com o menor preço
-    const finalResults = combineAndFilterResults(
-      resultsFirstUser,
-      resultsSecondUser
-    )
+    // const finalResults = combineAndFilterResults(
+    //   resultsFirstUser,
+    //   resultsSecondUser
+    // )
+
+    const finalResults = [...resultsFirstUser, ...resultsSecondUser]
 
     const response = {
       filterDateRange: `${checkInDate} a ${checkOutDate}`,
@@ -438,7 +553,10 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
       filterResults: finalResults
     }
 
-    console.log('Resposta final preparada')
+    console.log(
+      'Resposta final preparada, número de resultados: ',
+      finalResults.length
+    )
     res.json(response)
   } catch (error) {
     console.error('Erro ao processar a busca de acomodações:', error.message)
