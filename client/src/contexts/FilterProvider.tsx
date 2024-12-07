@@ -60,6 +60,10 @@ const FilterProvider = ({ children }: { children: React.ReactNode }) => {
 
   const filterResults = useFilterAccommodations(filterData)
 
+  useEffect(() => {
+    console.log(filterData)
+  }, [filterData])
+
   const handleFilter = async (newFilterData: IFilterData) => {
     try {
       setFilterData(newFilterData)

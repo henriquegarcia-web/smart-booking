@@ -100,8 +100,8 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
   const { token } = theme.useToken()
   const { filterResults } = useFilter()
 
-  const [selectedDiscount, setSelectedDiscount] = useState(0)
-  const [isDownloadLoading, setIsDownloadLoading] = useState(false)
+  const [selectedDiscount, setSelectedDiscount] = useState<number>(0)
+  const [isDownloadLoading, setIsDownloadLoading] = useState<boolean>(false)
 
   const formattedUsersList: IFilterData[] = useMemo(() => {
     if (!filterResults?.data?.filterResults) return []
@@ -127,8 +127,8 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
     })
   )
 
-  const handleChangeDiscount = (value: number) => {
-    setSelectedDiscount(value)
+  const handleChangeDiscount = (value: number | null) => {
+    setSelectedDiscount(value ?? 0)
   }
 
   const generateAndDownloadTxt = (data: IFilterResultsData) => {
