@@ -47,7 +47,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 // Definição de rotas
 app.use('/api', routes)
 
-app.get('/test', (req, res) => {
+app.get('/api/test', (req, res) => {
   res.json({ message: 'Teste bem-sucedido! O servidor está funcionando.' })
 })
 
