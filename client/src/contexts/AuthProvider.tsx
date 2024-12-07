@@ -71,7 +71,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const userData = useUserProfile(user?.id)
   const usersData = useAllUsersProfile(
-    (isUserLogged && user?.role === 'admin') || false
+    isUserLogged && (user?.role === 'admin' || user?.role === 'super_admin')
   )
 
   const { mutateAsync: deleteUser } = useDeleteUser()

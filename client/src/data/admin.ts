@@ -3,16 +3,24 @@
 export interface IRole {
   roleId: string
   roleLabel: string
+  roleColor: string
 }
 
 const rolesData: IRole[] = [
   {
+    roleId: 'super_admin',
+    roleLabel: 'Super Admin',
+    roleColor: 'orangered'
+  },
+  {
     roleId: 'admin',
-    roleLabel: 'Admin'
+    roleLabel: 'Admin',
+    roleColor: 'geekblue'
   },
   {
     roleId: 'member',
-    roleLabel: 'Membro'
+    roleLabel: 'Membro',
+    roleColor: 'cyan'
   }
 ]
 

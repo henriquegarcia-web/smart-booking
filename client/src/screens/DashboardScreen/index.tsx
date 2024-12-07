@@ -5,7 +5,12 @@ import * as S from './styles'
 import { Logo, UserMenu } from '@/components'
 import { Button, theme } from 'antd'
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi'
-import { adminMenusData, IMenu, menusData } from '@/data/menus'
+import {
+  adminMenusData,
+  IMenu,
+  menusData,
+  superAdminMenusData
+} from '@/data/menus'
 import { useAuth } from '@/contexts/AuthProvider'
 
 interface IDashboardScreen {}
@@ -70,27 +75,48 @@ const DashboardScreen = ({}: IDashboardScreen) => {
               )
             })}
           </S.MenusWrapper>
-          {user?.data?.role === 'admin' && (
-            <S.MenusWrapper>
-              {adminMenusData.map((menu: IMenu) => {
-                if (!menu.menuVisible) return null
-                const isSelected = menu.menuId === selectedMenu.menuId
+          <S.MenusWrapper>
+            {(user?.data?.role === 'admin' ||
+              user?.data?.role === 'super_admin') && (
+              <>
+                {user?.data?.role === 'super_admin' &&
+                  superAdminMenusData.map((menu: IMenu) => {
+                    if (!menu.menuVisible) return null
+                    const isSelected = menu.menuId === selectedMenu.menuId
 
-                return (
-                  <Button
-                    key={menu.menuId}
-                    type={isSelected ? 'primary' : 'default'}
-                    disabled={menu.menuDisable}
-                    icon={menu.menuIcon}
-                    iconPosition="start"
-                    onClick={() => setSelectedMenu(menu)}
-                  >
-                    {isSideMenuOpen && menu.menuLabel}
-                  </Button>
-                )
-              })}
-            </S.MenusWrapper>
-          )}
+                    return (
+                      <Button
+                        key={menu.menuId}
+                        type={isSelected ? 'primary' : 'default'}
+                        disabled={menu.menuDisable}
+                        icon={menu.menuIcon}
+                        iconPosition="start"
+                        onClick={() => setSelectedMenu(menu)}
+                      >
+                        {isSideMenuOpen && menu.menuLabel}
+                      </Button>
+                    )
+                  })}
+                {adminMenusData.map((menu: IMenu) => {
+                  if (!menu.menuVisible) return null
+                  const isSelected = menu.menuId === selectedMenu.menuId
+
+                  return (
+                    <Button
+                      key={menu.menuId}
+                      type={isSelected ? 'primary' : 'default'}
+                      disabled={menu.menuDisable}
+                      icon={menu.menuIcon}
+                      iconPosition="start"
+                      onClick={() => setSelectedMenu(menu)}
+                    >
+                      {isSideMenuOpen && menu.menuLabel}
+                    </Button>
+                  )
+                })}
+              </>
+            )}
+          </S.MenusWrapper>
         </S.DashboardMenuWrapper>
       </S.DashboardMenu>
       <S.DashboardContent opened={isSideMenuOpen ? 1 : 0}>

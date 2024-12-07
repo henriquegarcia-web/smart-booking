@@ -42,98 +42,107 @@ const UsersAccessView = ({}: IUsersAccessView) => {
   const handleOpenCreateAccessModal = () => setCreateAccessModalOpen(true)
   const handleCloseCreateAccessModal = () => setCreateAccessModalOpen(false)
 
-  const columns: TableProps<DataType>['columns'] = [
-    {
-      title: 'Nome',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text) => <>{text}</>
-    },
-    {
-      title: 'E-mail',
-      dataIndex: 'email',
-      key: 'email',
-      render: (text) => <>{text}</>
-    },
+  const columns: TableProps<DataType>['columns'] = useMemo(() => {
+    if (!user?.data) return null
 
-    {
-      title: 'Permissão',
-      key: 'role',
-      dataIndex: 'role',
-      render: (role) => (
-        <Tag color={role === 'admin' ? 'geekblue' : 'cyan'}>
-          {role === 'admin' ? 'ADMIN' : 'MEMBRO'}
-        </Tag>
-      )
-    },
-    {
-      title: 'Bloqueado?',
-      dataIndex: 'blocked',
-      key: 'blocked',
-      render: (blocked) => <>{blocked ? 'Bloqueado' : 'Não'}</>
-    },
-    {
-      title: 'Opções',
-      key: 'action',
-      render: (_, record) => (
-        <S.TableActions>
-          <Tooltip
-            placement="bottomRight"
-            title="Deletar usuário"
-            arrow={true}
-            open={record.key !== user.data.id ? undefined : false}
-          >
-            <Popconfirm
-              title="Deletar"
-              description="Tem certeza que deseja deletar esse usuário? Essa ação não poderá ser desfeita."
-              onConfirm={() => handleDeleteUser(record.key)}
-              okButtonProps={{ loading: isUserOperationsLoading }}
-              okText="Sim"
-              cancelText="Cancelar"
-              placement="topRight"
-              disabled={record.key === user.data.id}
+    const isNotAdmin =
+      user.data.role !== 'admin' && user.data.role !== 'super_admin'
+
+    return [
+      {
+        title: 'Nome',
+        dataIndex: 'name',
+        key: 'name',
+        render: (text) => <>{text}</>
+      },
+      {
+        title: 'E-mail',
+        dataIndex: 'email',
+        key: 'email',
+        render: (text) => <>{text}</>
+      },
+
+      {
+        title: 'Permissão',
+        key: 'role',
+        dataIndex: 'role',
+        render: (role) => (
+          <Tag color={role === 'admin' ? 'geekblue' : 'cyan'}>
+            {role === 'admin' ? 'ADMIN' : 'MEMBRO'}
+          </Tag>
+        )
+      },
+      {
+        title: 'Bloqueado?',
+        dataIndex: 'blocked',
+        key: 'blocked',
+        render: (blocked) => <>{blocked ? 'Bloqueado' : 'Não'}</>
+      },
+      {
+        title: 'Opções',
+        key: 'action',
+        render: (_, record) => (
+          <S.TableActions>
+            <Tooltip
+              placement="bottomRight"
+              title="Deletar usuário"
+              arrow={true}
+              open={record.key !== user.data.id ? undefined : false}
             >
-              <Button
-                icon={<FiTrash />}
-                disabled={record.key === user.data.id}
-              />
-            </Popconfirm>
-          </Tooltip>
-          <Tooltip
-            placement="bottomRight"
-            title={!record.blocked ? 'Bloquear usuário' : 'Desbloquear usuário'}
-            arrow={true}
-            open={record.key !== user.data.id ? undefined : false}
-          >
-            <Popconfirm
-              title={!record.blocked ? 'Bloquear' : 'Desbloquear'}
-              description={
-                !record.blocked
-                  ? 'Tem certeza que deseja bloquear esse usuário?'
-                  : 'Tem certeza que deseja desbloquear esse usuário?'
+              <Popconfirm
+                title="Deletar"
+                description="Tem certeza que deseja deletar esse usuário? Essa ação não poderá ser desfeita."
+                onConfirm={() => handleDeleteUser(record.key)}
+                okButtonProps={{ loading: isUserOperationsLoading }}
+                okText="Sim"
+                cancelText="Cancelar"
+                placement="topRight"
+                disabled={record.key === user.data.id || isNotAdmin}
+              >
+                <Button
+                  icon={<FiTrash />}
+                  disabled={record.key === user.data.id || isNotAdmin}
+                />
+              </Popconfirm>
+            </Tooltip>
+            <Tooltip
+              placement="bottomRight"
+              title={
+                !record.blocked ? 'Bloquear usuário' : 'Desbloquear usuário'
               }
-              onConfirm={() =>
-                handleToggleUserBlock(record.key, !record.blocked)
-              }
-              okButtonProps={{ loading: isUserOperationsLoading }}
-              okText="Sim"
-              cancelText="Cancelar"
-              placement="topRight"
-              disabled={record.key === user.data.id}
+              arrow={true}
+              open={record.key !== user.data.id ? undefined : false}
             >
-              <Button
-                icon={record.blocked ? <FiLock /> : <FiUnlock />}
-                disabled={record.key === user.data.id}
-              />
-            </Popconfirm>
-          </Tooltip>
-        </S.TableActions>
-      )
-    }
-  ]
+              <Popconfirm
+                title={!record.blocked ? 'Bloquear' : 'Desbloquear'}
+                description={
+                  !record.blocked
+                    ? 'Tem certeza que deseja bloquear esse usuário?'
+                    : 'Tem certeza que deseja desbloquear esse usuário?'
+                }
+                onConfirm={() =>
+                  handleToggleUserBlock(record.key, !record.blocked)
+                }
+                okButtonProps={{ loading: isUserOperationsLoading }}
+                okText="Sim"
+                cancelText="Cancelar"
+                placement="topRight"
+                disabled={record.key === user.data.id || isNotAdmin}
+              >
+                <Button
+                  icon={record.blocked ? <FiLock /> : <FiUnlock />}
+                  disabled={record.key === user.data.id || isNotAdmin}
+                />
+              </Popconfirm>
+            </Tooltip>
+          </S.TableActions>
+        )
+      }
+    ]
+  }, [user])
 
   const formattedUsersList = useMemo(() => {
-    if (!users) return []
+    if (!users?.data) return []
 
     return users.data.map((userData) => ({
       key: userData.id,

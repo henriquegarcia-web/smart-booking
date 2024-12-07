@@ -5,6 +5,7 @@ import type { MenuProps } from 'antd'
 
 import { useAuth } from '@/contexts/AuthProvider'
 import { formatUsername } from '@/utils/functions/formatUsername'
+import { rolesData } from '@/data/admin'
 
 interface IUserMenu {}
 
@@ -23,6 +24,8 @@ const UserMenu = ({}: IUserMenu) => {
 
   if (!user || !user?.data || user.isLoading) return <>Carregando...</>
 
+  const userRole = rolesData.find((role) => role.roleId === user.data.role)
+
   return (
     <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
       <S.UserMenu token={token}>
@@ -30,9 +33,11 @@ const UserMenu = ({}: IUserMenu) => {
           <p style={{ color: token.colorTextHeading }}>
             Olá, <b>{user.data.name}</b>
           </p>
-          <Tag color={user.data.role === 'admin' ? 'geekblue' : 'cyan'}>
-            {user.data.role === 'admin' ? 'ADMIN' : 'MEMBRO'}
-          </Tag>
+          {userRole && (
+            <Tag color={userRole.roleColor}>
+              {userRole.roleLabel.toUpperCase()}
+            </Tag>
+          )}
         </S.UserMenuInfos>
         <Avatar
           style={{ backgroundColor: '#fde3cf', color: '#f56a00' }}

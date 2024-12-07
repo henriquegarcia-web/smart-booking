@@ -1,5 +1,5 @@
-import { AccommodationSearchView, UsersAccessView } from '@/views'
-import { FiSearch, FiUsers } from 'react-icons/fi'
+import { AccommodationSearchView, SettingsView, UsersAccessView } from '@/views'
+import { FiSearch, FiSettings, FiUsers } from 'react-icons/fi'
 
 export interface IMenu {
   menuId: string
@@ -24,7 +24,7 @@ const menusData: IMenu[] = [
 const adminMenusData: IMenu[] = [
   {
     menuId: 'users-menu',
-    menuLabel: 'Usuários & Acessos',
+    menuLabel: 'Usuários e Acessos',
     menuComponent: <UsersAccessView />,
     menuIcon: <FiUsers />,
     menuDisable: false,
@@ -32,4 +32,15 @@ const adminMenusData: IMenu[] = [
   }
 ]
 
-export { menusData, adminMenusData }
+const superAdminMenusData: IMenu[] = [
+  {
+    menuId: 'settings-menu',
+    menuLabel: 'Configurações',
+    menuComponent: <SettingsView />,
+    menuIcon: <FiSettings />,
+    menuDisable: false,
+    menuVisible: true
+  }
+]
+
+export { menusData, adminMenusData, superAdminMenusData }

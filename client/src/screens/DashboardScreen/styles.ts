@@ -60,6 +60,7 @@ export const DashboardMenuWrapper = styled.div<{ opened: number }>`
 export const MenusWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  row-gap: 10px;
   width: 100%;
 `
 
