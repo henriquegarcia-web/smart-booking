@@ -1,8 +1,6 @@
 import { Router } from 'express'
-import {
-  findAccommodationsOnTravelXs,
-  findAccommodationsOnConnectTravel
-} from '../controllers/FilterController.js'
+import { findAccommodationsOnTravelXs } from '../controllers/Filter/TravelXsController.js'
+import { findAccommodationsOnConnectTravel } from '../controllers/Filter/ConnectTravelController.js'
 import { AuthMiddleware } from '../middleware/AuthMiddleware.js'
 
 const router = Router()
