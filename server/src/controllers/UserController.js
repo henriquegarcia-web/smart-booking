@@ -39,8 +39,6 @@ export const getAllUsersProfile = async (req, res) => {
       role: user.role
     }))
 
-    console.log(formattedUsers.length)
-
     res.status(200).json(formattedUsers)
   } catch (error) {
     res
