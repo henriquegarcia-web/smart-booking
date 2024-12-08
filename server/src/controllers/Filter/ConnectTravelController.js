@@ -1,6 +1,9 @@
 import dotenv from 'dotenv'
 import puppeteer from 'puppeteer'
 import readline from 'readline'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 dotenv.config()
 
@@ -21,7 +24,6 @@ const waitForNavigationAndSelector = async (
     { timeout },
     expectedUrl
   )
-  // await page.waitForSelector(selector, { visible: true, timeout })
   console.log(`Redirecionamento e elemento "${selector}" prontos.`)
 }
 
@@ -45,59 +47,66 @@ export const authenticateUser = async (browser) => {
 
   const page = await browser.newPage()
   try {
-    // 1. Acessa a página de login
-    console.log(
-      `Acessando URL de login: ${process.env.CONNECT_TRAVEL_LOGIN_URL}`
-    )
-    await page.goto(process.env.CONNECT_TRAVEL_LOGIN_URL, {
+    // 1. Acessa a página base
+    console.log(`Acessando URL base: ${process.env.CONNECT_TRAVEL_BASE_URL}`)
+    await page.goto(process.env.CONNECT_TRAVEL_BASE_URL, {
       waitUntil: 'domcontentloaded'
     })
 
-    // 2. Preenche o formulário de login e clica em entrar
-    console.log('Preenchendo formulário de login...')
-    await page.type('#j_idt23', process.env.CONNECT_TRAVEL_USER, { delay: 50 })
-    await page.type('#j_idt25', process.env.CONNECT_TRAVEL_PASSWORD, {
-      delay: 50
-    })
-    await page.click('#j_idt27')
+    // 2. Verifica para onde foi redirecionado
+    console.log('Verificando redirecionamento...')
+    await delay(2000)
+    // await page.waitForNavigation({ waitUntil: 'domcontentloaded' })
 
-    // 3. Aguarda redirecionamento para página de validação do código
-    console.log('Aguardando página de validação de código...')
-    // await page.waitForSelector('#validation-code-input', {
-    //   visible: true,
-    //   timeout: 30000
-    // })
-    await page.waitForFunction(
-      (url) => window.location.href === url,
-      30000,
-      process.env.CONNECT_TRAVEL_OTP_URL
-    )
+    const currentUrl = page.url()
+    if (currentUrl === process.env.CONNECT_TRAVEL_LOGIN_URL) {
+      console.log('Página de login detectada...')
+      // Preenche o formulário de login e clica em entrar
+      console.log('Preenchendo formulário de login...')
+      await page.type('#j_idt23', process.env.CONNECT_TRAVEL_USER, {
+        delay: 50
+      })
+      await page.type('#j_idt25', process.env.CONNECT_TRAVEL_PASSWORD, {
+        delay: 50
+      })
+      await page.click('#j_idt27')
 
-    // 4. Solicita o código ao cliente (input via terminal ou API)
-    const validationCode = await getUserInput(
-      'Digite o código de validação recebido por e-mail: '
-    )
+      // Aguarda redirecionamento para a página de validação do código ou página principal
+      console.log('Aguardando redirecionamento após login...')
+      await page.waitForNavigation({ waitUntil: 'domcontentloaded' })
 
-    // 5. Insere o código e envia
-    console.log('Inserindo código de validação...')
-    await page.type('input[type="text"]', validationCode, { delay: 50 })
-    await page.click('button[type="submit"]')
+      const postLoginUrl = page.url()
+      if (postLoginUrl === process.env.CONNECT_TRAVEL_OTP_URL) {
+        console.log('Página de validação de código detectada...')
+        // Solicita o código ao cliente (input via terminal ou API)
+        const validationCode = await getUserInput(
+          'Digite o código de validação recebido por e-mail: '
+        )
 
-    // 6. Aguarda redirecionamento para a página principal (home)
-    console.log('Validando código e aguardando redirecionamento...')
-    // await page.waitForSelector('.banner-principal', {
-    //   visible: true,
-    //   timeout: 30000
-    // })
-    await page.waitForFunction(
-      (url) => window.location.href === url,
-      30000,
-      process.env.CONNECT_TRAVEL_REDIRECT_URL
-    )
+        // Insere o código e envia
+        console.log('Inserindo código de validação...')
+        await page.type('input[type="text"]', validationCode, { delay: 50 })
+        await page.click('button[type="submit"]')
 
-    console.log('Autenticação finalizada com sucesso!')
+        // Aguarda redirecionamento para a página principal (home)
+        console.log('Validando código e aguardando redirecionamento...')
+        await page.waitForNavigation({ waitUntil: 'domcontentloaded' })
+      }
 
-    // 7. Retorna a sessão autenticada
+      if (page.url() === process.env.CONNECT_TRAVEL_REDIRECT_URL) {
+        console.log('Autenticação finalizada com sucesso!')
+      } else {
+        throw new Error('Redirecionamento inesperado após a autenticação.')
+      }
+    } else if (currentUrl === process.env.CONNECT_TRAVEL_REDIRECT_URL) {
+      console.log(
+        'Usuário já autenticado, redirecionado diretamente para a página principal.'
+      )
+    } else {
+      throw new Error('Redirecionamento inesperado ao acessar a URL base.')
+    }
+
+    // Retorna a sessão autenticada
     const clientCookies = await page.cookies()
     return clientCookies
   } catch (error) {
@@ -127,7 +136,19 @@ export const loadSession = async (browser, cookies) => {
 
 const executeScraping = async () => {
   console.log('Iniciando o scraping com fluxo de autenticação...')
-  const browser = await puppeteer.launch({ headless: true })
+
+  // Configura o diretório para armazenar dados do usuário
+  const __filename = fileURLToPath(import.meta.url)
+  const __dirname = path.dirname(__filename)
+  const userDataDir = path.join(__dirname, 'user_data')
+  if (!fs.existsSync(userDataDir)) {
+    fs.mkdirSync(userDataDir)
+  }
+
+  const browser = await puppeteer.launch({
+    headless: true,
+    userDataDir
+  })
 
   try {
     // 1. Realiza o login e autenticação (uma única vez)
@@ -142,8 +163,6 @@ const executeScraping = async () => {
       waitUntil: 'domcontentloaded'
     })
 
-    // await delay(10000)
-
     console.log('Executando operações pós-autenticação...')
 
     // ===========================================================================
@@ -155,11 +174,6 @@ const executeScraping = async () => {
       return element ? element.textContent.trim() : null
     }, 'li[id="menuform:sm_leftmenu_2"] > a')
 
-    // const buttonText = await page.evaluate((selector) => {
-    //   const element = document.querySelector(selector)
-    //   return element ? element.innerText : null
-    // }, resultsHeaderSelector)
-
     console.log(
       '[SUCESSO] - Botão Booking encontrado! Texto obtido: ',
       buttonText
@@ -167,21 +181,14 @@ const executeScraping = async () => {
 
     await page.click('#layout-menubar-resize')
     await delay(2000)
-    // await page.screenshot({ path: 'after-click-01.png' })
 
     await page.click('.layout-menubar-container li:nth-of-type(3) > a')
-
     await delay(2000)
-    // await page.screenshot({ path: 'after-click-02.png' })
 
     console.log(
       '[SUCESSO] - Botão Booking clicado! Aguardando confirmação de redirecionamento'
     )
 
-    // await delay(5000)
-    // await page.screenshot({ path: 'after-click-01.png' })
-
-    // Após clicar no botão de booking
     await page.waitForSelector('iframe[name="myiFrame"]', {
       visible: true,
       timeout: 30000
@@ -192,10 +199,6 @@ const executeScraping = async () => {
       timeout: 30000
     })
 
-    // await page.waitForSelector('#frmMotorHotel', {
-    //   visible: true,
-    //   timeout: 30000
-    // })
     console.log('[SUCESSO] - Página de booking acessada')
 
     // **1. Localizar e digitar no campo de destino**
@@ -206,8 +209,6 @@ const executeScraping = async () => {
     const checkoutInputSelector =
       '#frmMotorHotel .ui-g input[placeholder="Check-out"]'
 
-    // console.log('Localizando o campo de input...');
-    // await page.waitForSelector(destinationInputSelector, { visible: true });
     await frame.type(destinationInputSelector, 'Olimpia')
     console.log('Campo localizado. Digitado "Olimpia"...')
 
@@ -216,6 +217,8 @@ const executeScraping = async () => {
     console.log('Aguardando o modal abrir...')
     await frame.waitForSelector(modalSelector, { visible: true })
     console.log('Modal encontrado e visível.')
+
+    // await page.screenshot({ path: 'after-click-01.png' })
 
     // **3. Selecionar o primeiro elemento na lista do modal**
     const firstItemSelector = `${modalSelector} tr.ui-autocomplete-item` // Seleção do primeiro item no modal
@@ -232,29 +235,36 @@ const executeScraping = async () => {
     await delay(2000)
     console.log('Processo concluído!')
 
-    // await frame.type(checkinInputSelector, '08/12/2024')
-    // await frame.type(checkoutInputSelector, '12/12/2024')
+    await frame.type(checkinInputSelector, '10/12/2024')
+    await frame.type(checkoutInputSelector, '12/12/2024')
 
-    // await frame.click('button[type="submit"]')
-    // console.log('[SUCESSO] - Formulário de pesquisa enviado!')
+    await frame.click('.pnlBotaoPesquisa button[type="submit"]')
+    console.log('[SUCESSO] - Formulário de pesquisa enviado!')
 
-    // await frame.waitForSelector('#pnlTituloResultado', {
-    //   visible: true,
-    //   timeout: 30000
-    // })
+    await delay(10000)
 
-    // console.log('[SUCESSO] - Resultados encontrados!')
+    await frame.waitForSelector('#pnlTituloResultado', {
+      visible: true,
+      timeout: 30000
+    })
 
-    // const resultsHeaderSelector = '#pnlTituloResultado .FontBold'
+    console.log('[SUCESSO] - Resultados encontrados!')
 
-    // const elementText = await frame.evaluate((selector) => {
-    //   const element = document.querySelector(selector)
-    //   return element ? element.innerText : null
-    // }, resultsHeaderSelector)
+    const resultsHeaderSelector = '#pnlTituloResultado .FontBold'
 
-    // console.log('[SUCESSO] - Texto obtido: ', elementText)
+    const elementText = await frame.evaluate((selector) => {
+      const element = document.querySelector(selector)
+      return element ? element.innerText : null
+    }, resultsHeaderSelector)
+
+    console.log('[SUCESSO] - Texto obtido: ', elementText)
 
     // ===========================================================================
+
+    // await delay(2000)
+    // console.log('Datas preenchidas!')
+
+    // await page.screenshot({ path: 'after-click-03.png' })
   } catch (error) {
     console.error('Erro no fluxo de scraping:', error)
   } finally {
@@ -267,8 +277,6 @@ const executeScraping = async () => {
 
 export const findAccommodationsOnConnectTravel = async (req, res) => {
   try {
-    // const token = await authenticateConnectTravel()
-    // const data = await makeConnectTravelRequest(token)
     executeScraping()
     res.json(true)
   } catch (error) {
