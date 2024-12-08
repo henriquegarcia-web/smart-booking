@@ -4,6 +4,10 @@ import readline from 'readline'
 
 dotenv.config()
 
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 // Função para aguardar redirecionamentos e elemento específico
 const waitForNavigationAndSelector = async (
   page,
@@ -59,6 +63,10 @@ export const authenticateUser = async (browser) => {
 
     // 3. Aguarda redirecionamento para página de validação do código
     console.log('Aguardando página de validação de código...')
+    // await page.waitForSelector('#validation-code-input', {
+    //   visible: true,
+    //   timeout: 30000
+    // })
     await page.waitForFunction(
       (url) => window.location.href === url,
       30000,
@@ -77,6 +85,10 @@ export const authenticateUser = async (browser) => {
 
     // 6. Aguarda redirecionamento para a página principal (home)
     console.log('Validando código e aguardando redirecionamento...')
+    // await page.waitForSelector('.banner-principal', {
+    //   visible: true,
+    //   timeout: 30000
+    // })
     await page.waitForFunction(
       (url) => window.location.href === url,
       30000,
@@ -130,6 +142,8 @@ const executeScraping = async () => {
       waitUntil: 'domcontentloaded'
     })
 
+    // await delay(10000)
+
     console.log('Executando operações pós-autenticação...')
 
     // ===========================================================================
@@ -141,81 +155,104 @@ const executeScraping = async () => {
       return element ? element.textContent.trim() : null
     }, 'li[id="menuform:sm_leftmenu_2"] > a')
 
+    // const buttonText = await page.evaluate((selector) => {
+    //   const element = document.querySelector(selector)
+    //   return element ? element.innerText : null
+    // }, resultsHeaderSelector)
+
     console.log(
       '[SUCESSO] - Botão Booking encontrado! Texto obtido: ',
       buttonText
     )
 
-    // Simula a chamada do onclick
-    await page.evaluate(() => {
-      const element = document.querySelector(
-        'li[id="menuform:sm_leftmenu_2"] > a'
-      )
-      if (element) {
-        element.click()
-      }
-    })
+    await page.click('#layout-menubar-resize')
+    await delay(2000)
+    // await page.screenshot({ path: 'after-click-01.png' })
+
+    await page.click('.layout-menubar-container li:nth-of-type(3) > a')
+
+    await delay(2000)
+    // await page.screenshot({ path: 'after-click-02.png' })
 
     console.log(
       '[SUCESSO] - Botão Booking clicado! Aguardando confirmação de redirecionamento'
     )
 
-    await page.waitForSelector('#frmMotorHotel', {
+    // await delay(5000)
+    // await page.screenshot({ path: 'after-click-01.png' })
+
+    // Após clicar no botão de booking
+    await page.waitForSelector('iframe[name="myiFrame"]', {
       visible: true,
       timeout: 30000
     })
+    const frame = await page.frames().find((f) => f.name() === 'myiFrame')
+    await frame.waitForSelector('#frmMotorHotel', {
+      visible: true,
+      timeout: 30000
+    })
+
+    // await page.waitForSelector('#frmMotorHotel', {
+    //   visible: true,
+    //   timeout: 30000
+    // })
     console.log('[SUCESSO] - Página de booking acessada')
 
     // **1. Localizar e digitar no campo de destino**
-    const destinationInputSelector = '#frmMotorHotel .ui-g input:nth-of-type(1)'
-    const checkinInputSelector = '#frmMotorHotel .ui-g input:nth-of-type(2)'
-    const checkoutInputSelector = '#frmMotorHotel .ui-g input:nth-of-type(3)'
+    const destinationInputSelector =
+      '#frmMotorHotel .ui-g input.ui-inputfield:nth-of-type(1)'
+    const checkinInputSelector =
+      '#frmMotorHotel .ui-g input[placeholder="Check-in"]'
+    const checkoutInputSelector =
+      '#frmMotorHotel .ui-g input[placeholder="Check-out"]'
 
-    await page.type(destinationInputSelector, 'Olimpia')
+    // console.log('Localizando o campo de input...');
+    // await page.waitForSelector(destinationInputSelector, { visible: true });
+    await frame.type(destinationInputSelector, 'Olimpia')
     console.log('Campo localizado. Digitado "Olimpia"...')
 
     // **2. Aguardar a abertura do modal**
     const modalSelector = '#frmMotorHotel\\:idDestinoHotel_panel' // Selector direto do modal
     console.log('Aguardando o modal abrir...')
-    await page.waitForSelector(modalSelector, { visible: true })
+    await frame.waitForSelector(modalSelector, { visible: true })
     console.log('Modal encontrado e visível.')
 
     // **3. Selecionar o primeiro elemento na lista do modal**
     const firstItemSelector = `${modalSelector} tr.ui-autocomplete-item` // Seleção do primeiro item no modal
     console.log('Localizando o primeiro item na lista...')
-    await page.waitForSelector(firstItemSelector, { visible: true })
+    await frame.waitForSelector(firstItemSelector, { visible: true })
     console.log('Primeiro item localizado.')
 
     // Clique no primeiro item
     console.log('Clicando no primeiro item...')
-    await page.click(firstItemSelector)
+    await frame.click(firstItemSelector)
 
     // **4. Aguardar 2 segundos**
     console.log('Aguardando 2 segundos...')
-    await page.waitForTimeout(2000)
+    await delay(2000)
     console.log('Processo concluído!')
 
-    await page.type(checkinInputSelector, '08/12/2024')
-    await page.type(checkoutInputSelector, '12/12/2024')
+    // await frame.type(checkinInputSelector, '08/12/2024')
+    // await frame.type(checkoutInputSelector, '12/12/2024')
 
-    await page.click('button[type="submit"]')
-    console.log('[SUCESSO] - Formulário de pesquisa enviado!')
+    // await frame.click('button[type="submit"]')
+    // console.log('[SUCESSO] - Formulário de pesquisa enviado!')
 
-    await page.waitForSelector('#pnlTituloResultado', {
-      visible: true,
-      timeout: 30000
-    })
+    // await frame.waitForSelector('#pnlTituloResultado', {
+    //   visible: true,
+    //   timeout: 30000
+    // })
 
-    console.log('[SUCESSO] - Resultados encontrados!')
+    // console.log('[SUCESSO] - Resultados encontrados!')
 
-    const resultsHeaderSelector = '#pnlTituloResultado .FontBold'
+    // const resultsHeaderSelector = '#pnlTituloResultado .FontBold'
 
-    const elementText = await page.evaluate((selector) => {
-      const element = document.querySelector(selector)
-      return element ? element.innerText : null
-    }, resultsHeaderSelector)
+    // const elementText = await frame.evaluate((selector) => {
+    //   const element = document.querySelector(selector)
+    //   return element ? element.innerText : null
+    // }, resultsHeaderSelector)
 
-    console.log('[SUCESSO] - Texto obtido: ', elementText)
+    // console.log('[SUCESSO] - Texto obtido: ', elementText)
 
     // ===========================================================================
   } catch (error) {
@@ -230,6 +267,8 @@ const executeScraping = async () => {
 
 export const findAccommodationsOnConnectTravel = async (req, res) => {
   try {
+    // const token = await authenticateConnectTravel()
+    // const data = await makeConnectTravelRequest(token)
     executeScraping()
     res.json(true)
   } catch (error) {
