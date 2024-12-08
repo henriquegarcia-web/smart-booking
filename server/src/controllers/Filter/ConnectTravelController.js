@@ -59,10 +59,6 @@ export const authenticateUser = async (browser) => {
 
     // 3. Aguarda redirecionamento para página de validação do código
     console.log('Aguardando página de validação de código...')
-    // await page.waitForSelector('#validation-code-input', {
-    //   visible: true,
-    //   timeout: 30000
-    // })
     await page.waitForFunction(
       (url) => window.location.href === url,
       30000,
@@ -81,10 +77,6 @@ export const authenticateUser = async (browser) => {
 
     // 6. Aguarda redirecionamento para a página principal (home)
     console.log('Validando código e aguardando redirecionamento...')
-    // await page.waitForSelector('.banner-principal', {
-    //   visible: true,
-    //   timeout: 30000
-    // })
     await page.waitForFunction(
       (url) => window.location.href === url,
       30000,
@@ -143,24 +135,31 @@ const executeScraping = async () => {
     // ===========================================================================
 
     await page.waitForSelector('li[id="menuform:sm_leftmenu_2"] > a')
-    console.log('[SUCESSO] - Botão Booking encontrado!')
 
-    // Executa a função JavaScript no contexto da página
+    const buttonText = await page.evaluate((sel) => {
+      const element = document.querySelector(sel)
+      return element ? element.textContent.trim() : null
+    }, 'li[id="menuform:sm_leftmenu_2"] > a')
+
+    console.log(
+      '[SUCESSO] - Botão Booking encontrado! Texto obtido: ',
+      buttonText
+    )
+
+    // Simula a chamada do onclick
     await page.evaluate(() => {
-      const menuItem = document.querySelector(
+      const element = document.querySelector(
         'li[id="menuform:sm_leftmenu_2"] > a'
       )
-
-      if (menuItem) {
-        PF('widget_menuform_sm_leftmenu').toggleSubMenu(menuItem)
-        montaMenu.addTab('Booking', '/infotravel/admin/venda/venda.xhtml')
-      } else {
-        console.error('Menu item not found')
+      if (element) {
+        element.click()
       }
     })
 
-    // await page.click('#menuform ul li:nth-child(3) a')
-    // iframe[name="myiFrame"]
+    console.log(
+      '[SUCESSO] - Botão Booking clicado! Aguardando confirmação de redirecionamento'
+    )
+
     await page.waitForSelector('#frmMotorHotel', {
       visible: true,
       timeout: 30000
@@ -172,8 +171,6 @@ const executeScraping = async () => {
     const checkinInputSelector = '#frmMotorHotel .ui-g input:nth-of-type(2)'
     const checkoutInputSelector = '#frmMotorHotel .ui-g input:nth-of-type(3)'
 
-    // console.log('Localizando o campo de input...');
-    // await page.waitForSelector(destinationInputSelector, { visible: true });
     await page.type(destinationInputSelector, 'Olimpia')
     console.log('Campo localizado. Digitado "Olimpia"...')
 
@@ -233,8 +230,6 @@ const executeScraping = async () => {
 
 export const findAccommodationsOnConnectTravel = async (req, res) => {
   try {
-    // const token = await authenticateConnectTravel()
-    // const data = await makeConnectTravelRequest(token)
     executeScraping()
     res.json(true)
   } catch (error) {
