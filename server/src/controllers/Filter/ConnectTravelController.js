@@ -5,7 +5,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-// await page.screenshot({ path: 'after-click-02.png' })
+await page.screenshot({ path: 'after-click-02.png' })
 
 dotenv.config()
 
@@ -146,7 +146,7 @@ const fillBookingForm = async (
   await delay(DEFAULT_DELAY)
 
   console.log('[CONCLUÍDO] - Preenchimento de: Destino')
-  await page.screenshot({ path: 'after-click-01.png' })
+  // await page.screenshot({ path: 'after-click-01.png' })
 
   await frame.type(checkinInputSelector, checkInDate)
   await frame.click(destinationModalClose)
@@ -155,11 +155,11 @@ const fillBookingForm = async (
   await delay(DEFAULT_DELAY)
 
   console.log('[CONCLUÍDO] - Preenchimento de: Datas')
-  await page.screenshot({ path: 'after-click-02.png' })
+  // await page.screenshot({ path: 'after-click-02.png' })
 
   await frame.click(bedroomsModalOpenSelector)
   await delay(DEFAULT_DELAY)
-  await page.screenshot({ path: 'after-click-03.png' })
+  // await page.screenshot({ path: 'after-click-03.png' })
   await waitForSelector(frame, bedroomsModalSelector, 30000)
 
   for (let i = 1; i < accommodationsCount; i++) {
@@ -168,7 +168,7 @@ const fillBookingForm = async (
   }
 
   console.log('[CONCLUÍDO] - Preenchimento de: Apartamentos')
-  await page.screenshot({ path: 'after-click-04.png' })
+  // await page.screenshot({ path: 'after-click-04.png' })
 
   await frame.click(bedroomsModalCloseSelector)
 
@@ -176,7 +176,7 @@ const fillBookingForm = async (
 }
 
 const scrapeAccommodations = async (page, frame, mealType) => {
-  await page.screenshot({ path: 'after-click-05.png' })
+  // await page.screenshot({ path: 'after-click-05.png' })
 
   console.log('Iniciando scraping de acomodações...')
   await waitForSelector(frame, '#pnlTituloResultado', 30000)
