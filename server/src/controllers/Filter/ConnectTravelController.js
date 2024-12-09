@@ -5,13 +5,17 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
+// await page.screenshot({ path: 'after-click-03.png' })
+
 dotenv.config()
+
+const DEFAULT_DELAY = 2000
+const LONGER_DELAY = 10000
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-// Função para aguardar redirecionamentos e elemento específico
 const waitForNavigationAndSelector = async (
   page,
   expectedUrl,
@@ -27,7 +31,6 @@ const waitForNavigationAndSelector = async (
   console.log(`Redirecionamento e elemento "${selector}" prontos.`)
 }
 
-// Função para capturar input do terminal
 const getUserInput = (query) => {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -41,7 +44,6 @@ const getUserInput = (query) => {
   )
 }
 
-// Autenticação com login e validação de código
 export const authenticateUser = async (browser) => {
   console.log('Iniciando processo de autenticação...')
 
@@ -55,11 +57,14 @@ export const authenticateUser = async (browser) => {
 
     // 2. Verifica para onde foi redirecionado
     console.log('Verificando redirecionamento...')
-    await delay(2000)
+    await delay(DEFAULT_DELAY)
     // await page.waitForNavigation({ waitUntil: 'domcontentloaded' })
 
     const currentUrl = page.url()
-    if (currentUrl === process.env.CONNECT_TRAVEL_LOGIN_URL) {
+    if (
+      currentUrl === process.env.CONNECT_TRAVEL_BASE_URL ||
+      currentUrl === process.env.CONNECT_TRAVEL_LOGIN_URL
+    ) {
       console.log('Página de login detectada...')
       // Preenche o formulário de login e clica em entrar
       console.log('Preenchendo formulário de login...')
@@ -73,7 +78,8 @@ export const authenticateUser = async (browser) => {
 
       // Aguarda redirecionamento para a página de validação do código ou página principal
       console.log('Aguardando redirecionamento após login...')
-      await page.waitForNavigation({ waitUntil: 'domcontentloaded' })
+      // await page.waitForNavigation({ waitUntil: 'domcontentloaded' })
+      await delay(DEFAULT_DELAY)
 
       const postLoginUrl = page.url()
       if (postLoginUrl === process.env.CONNECT_TRAVEL_OTP_URL) {
@@ -90,7 +96,8 @@ export const authenticateUser = async (browser) => {
 
         // Aguarda redirecionamento para a página principal (home)
         console.log('Validando código e aguardando redirecionamento...')
-        await page.waitForNavigation({ waitUntil: 'domcontentloaded' })
+        // await page.waitForNavigation({ waitUntil: 'domcontentloaded' })
+        await delay(DEFAULT_DELAY)
       }
 
       if (page.url() === process.env.CONNECT_TRAVEL_REDIRECT_URL) {
@@ -103,6 +110,7 @@ export const authenticateUser = async (browser) => {
         'Usuário já autenticado, redirecionado diretamente para a página principal.'
       )
     } else {
+      console.log(currentUrl)
       throw new Error('Redirecionamento inesperado ao acessar a URL base.')
     }
 
@@ -117,7 +125,6 @@ export const authenticateUser = async (browser) => {
   }
 }
 
-// Carrega cookies salvos em uma nova página
 export const loadSession = async (browser, cookies) => {
   console.log('Reutilizando sessão autenticada...')
   const page = await browser.newPage()
@@ -134,7 +141,104 @@ export const loadSession = async (browser, cookies) => {
   }
 }
 
-const executeScraping = async () => {
+const handleFilterPage = async (page, frame, mealType) => {
+  console.log('Iniciando o processo de filtro e scraping...')
+
+  try {
+    // Verifica se o elemento pai existe
+    const pnlResultadoHotel = await frame.$('#pnlResultadoHotel')
+    if (!pnlResultadoHotel) {
+      console.log('Elemento #pnlResultadoHotel não encontrado')
+      return []
+    }
+
+    // Coleta os dados brutos dos cards
+    const cardsRawData = await frame.$$eval(
+      'span#pnlResultadoHotel > div:not(.paginacao)',
+      (cards, mealType) => {
+        return cards.map((card) => {
+          const name =
+            card.querySelector('.Fs22.hardblue')?.textContent.trim() || ''
+          const rooms = Array.from(card.querySelectorAll('.ui-g.Fs12.hoverQrt'))
+          const roomsData = rooms.map((room) => ({
+            mealText:
+              room.querySelector('.ui-g-11.ui-md-6.ui-lg-6')?.textContent || '',
+            priceText:
+              room
+                .querySelector('.ui-g-4.ui-md-3.ui-lg-3.TexAlRight')
+                ?.textContent?.trim() || ''
+          }))
+          return { name, roomsData, html: card.outerHTML }
+        })
+      },
+      mealType
+    )
+
+    console.log(`Número de cards encontrados: ${cardsRawData.length}`)
+
+    // Processa os dados coletados
+    const processedData = cardsRawData
+      .map((cardData, index) => {
+        console.log(`Processando card ${index + 1}`)
+        console.log('OPÇÕES ===>', cardData.roomsData.length)
+        // console.log('CARD HTML ===>\n', cardData.html)
+
+        const mealTypeMap = {
+          only_breakfast: 'Café da manhã' || 'Breakfast',
+          half_meal: 'Meia pensão' || 'Half board',
+          full_meal: 'Pensão completa' || 'Full board'
+        }
+        const desiredMealType = mealTypeMap[mealType]
+
+        let lowestPrice = Infinity
+        let selectedRoom = null
+
+        cardData.roomsData.forEach((room) => {
+          if (room.mealText.includes(desiredMealType)) {
+            const match = room.priceText.match(/R\$\s?([\d.,]+)/)
+            if (!match) return
+
+            const valueString = match[1]
+
+            const floatValue = parseFloat(
+              valueString.replace(/\./g, '').replace(',', '.')
+            )
+
+            if (floatValue < lowestPrice) {
+              lowestPrice = floatValue
+              selectedRoom = room
+            }
+          }
+        })
+
+        if (selectedRoom) {
+          return {
+            accommodationName: cardData.name,
+            accommodationPrice: `R$ ${lowestPrice.toFixed(2)}`,
+            accommodationMeal: desiredMealType,
+            accommodationProvider: 'Connect Travel'
+          }
+        }
+
+        return null
+      })
+      .filter((data) => data !== null)
+
+    console.log(`Total de cards processados: ${processedData.length}`)
+    return processedData
+  } catch (error) {
+    console.error('Erro ao processar a página:', error)
+    return []
+  }
+}
+
+const executeScraping = async (
+  checkInDate,
+  checkOutDate,
+  filterAdults,
+  filterChilds,
+  mealType
+) => {
   console.log('Iniciando o scraping com fluxo de autenticação...')
 
   // Configura o diretório para armazenar dados do usuário
@@ -165,8 +269,6 @@ const executeScraping = async () => {
 
     console.log('Executando operações pós-autenticação...')
 
-    // ===========================================================================
-
     await page.waitForSelector('li[id="menuform:sm_leftmenu_2"] > a')
 
     const buttonText = await page.evaluate((sel) => {
@@ -180,14 +282,16 @@ const executeScraping = async () => {
     )
 
     await page.click('#layout-menubar-resize')
-    await delay(2000)
+    await delay(DEFAULT_DELAY)
 
     await page.click('.layout-menubar-container li:nth-of-type(3) > a')
-    await delay(2000)
+    await delay(DEFAULT_DELAY)
 
     console.log(
       '[SUCESSO] - Botão Booking clicado! Aguardando confirmação de redirecionamento'
     )
+
+    // =========================================================================== INÍCIO LÓGICA IFRAME
 
     await page.waitForSelector('iframe[name="myiFrame"]', {
       visible: true,
@@ -232,16 +336,17 @@ const executeScraping = async () => {
 
     // **4. Aguardar 2 segundos**
     console.log('Aguardando 2 segundos...')
-    await delay(2000)
+    await delay(DEFAULT_DELAY)
     console.log('Processo concluído!')
 
-    await frame.type(checkinInputSelector, '10/12/2024')
-    await frame.type(checkoutInputSelector, '12/12/2024')
+    await frame.type(checkinInputSelector, checkInDate)
+    await frame.type(checkoutInputSelector, checkOutDate)
 
     await frame.click('.pnlBotaoPesquisa button[type="submit"]')
     console.log('[SUCESSO] - Formulário de pesquisa enviado!')
 
-    await delay(10000)
+    await delay(LONGER_DELAY)
+    // await page.screenshot({ path: 'after-click-01.png' })
 
     await frame.waitForSelector('#pnlTituloResultado', {
       visible: true,
@@ -250,21 +355,16 @@ const executeScraping = async () => {
 
     console.log('[SUCESSO] - Resultados encontrados!')
 
-    const resultsHeaderSelector = '#pnlTituloResultado .FontBold'
+    const accommodations = await handleFilterPage(page, frame, mealType)
 
-    const elementText = await frame.evaluate((selector) => {
-      const element = document.querySelector(selector)
-      return element ? element.innerText : null
-    }, resultsHeaderSelector)
+    // =========================================================================== FIM LÓGICA IFRAME
 
-    console.log('[SUCESSO] - Texto obtido: ', elementText)
-
-    // ===========================================================================
-
-    // await delay(2000)
-    // console.log('Datas preenchidas!')
-
-    // await page.screenshot({ path: 'after-click-03.png' })
+    return {
+      filterAdults: filterAdults,
+      filterChilds: filterChilds,
+      filterDateRange: `${checkInDate} a ${checkOutDate}`,
+      filterResults: accommodations
+    }
   } catch (error) {
     console.error('Erro no fluxo de scraping:', error)
   } finally {
@@ -276,9 +376,25 @@ const executeScraping = async () => {
 // ========================================== CONNECT TRAVEL
 
 export const findAccommodationsOnConnectTravel = async (req, res) => {
+  const { checkInDate, checkOutDate, days, adultCount, childsAges, mealType } =
+    req.query
+
   try {
-    executeScraping()
-    res.json(true)
+    // const response = await executeScraping(
+    //   checkInDate,
+    //   checkOutDate,
+    //   parseInt(adultCount),
+    //   childsAges ? childsAges.split(',').length : 0,
+    //   mealType
+    // )
+    const response = await executeScraping(
+      '11/12/2024',
+      '12/12/2024',
+      2,
+      0,
+      'only_breakfast'
+    )
+    res.json(response)
   } catch (error) {
     res.status(500).json({
       error: 'Erro ao obter disponibilidade de hotéis',
