@@ -27,4 +27,4 @@ dist-ssr
 .env.development
 .env.production
 
-src/controllers/Filter/user_data
+user_data
