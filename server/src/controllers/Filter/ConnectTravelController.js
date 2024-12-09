@@ -5,30 +5,19 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-// await page.screenshot({ path: 'after-click-03.png' })
+// await page.screenshot({ path: 'after-click-02.png' })
 
 dotenv.config()
 
-const DEFAULT_DELAY = 2000
-const LONGER_DELAY = 10000
+const DEFAULT_DELAY = 1500
+const LONGER_DELAY = 4000
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-const waitForNavigationAndSelector = async (
-  page,
-  expectedUrl,
-  selector,
-  timeout = 30000
-) => {
-  console.log(`Aguardando URL: ${expectedUrl} e elemento: ${selector}`)
-  await page.waitForFunction(
-    (url) => window.location.href === url,
-    { timeout },
-    expectedUrl
-  )
-  console.log(`Redirecionamento e elemento "${selector}" prontos.`)
+const waitForSelector = async (page, selector, timeout = 30000) => {
+  console.log(`Aguardando elemento: ${selector}`)
+  await page.waitForSelector(selector, { visible: true, timeout })
+  console.log(`Elemento "${selector}" encontrado.`)
 }
 
 const getUserInput = (query) => {
@@ -44,79 +33,54 @@ const getUserInput = (query) => {
   )
 }
 
-export const authenticateUser = async (browser) => {
+const handleLogin = async (page) => {
+  console.log('Iniciando processo de login...')
+  await page.type('#j_idt23', process.env.CONNECT_TRAVEL_USER, { delay: 50 })
+  await page.type('#j_idt25', process.env.CONNECT_TRAVEL_PASSWORD, {
+    delay: 50
+  })
+  await page.click('#j_idt27')
+  await delay(DEFAULT_DELAY)
+}
+
+const handleOTP = async (page) => {
+  console.log('Página de validação de código detectada...')
+  const validationCode = await getUserInput(
+    'Digite o código de validação recebido por e-mail: '
+  )
+  await page.type('input[type="text"]', validationCode, { delay: 50 })
+  await page.click('button[type="submit"]')
+  await delay(DEFAULT_DELAY)
+}
+
+const authenticateUser = async (browser) => {
   console.log('Iniciando processo de autenticação...')
-
   const page = await browser.newPage()
+
   try {
-    // 1. Acessa a página base
-    console.log(`Acessando URL base: ${process.env.CONNECT_TRAVEL_BASE_URL}`)
     await page.goto(process.env.CONNECT_TRAVEL_BASE_URL, {
-      waitUntil: 'domcontentloaded'
+      waitUntil: 'networkidle0'
     })
-
-    // 2. Verifica para onde foi redirecionado
-    console.log('Verificando redirecionamento...')
-    await delay(DEFAULT_DELAY)
-    // await page.waitForNavigation({ waitUntil: 'domcontentloaded' })
-
     const currentUrl = page.url()
+
     if (
       currentUrl === process.env.CONNECT_TRAVEL_BASE_URL ||
       currentUrl === process.env.CONNECT_TRAVEL_LOGIN_URL
     ) {
-      console.log('Página de login detectada...')
-      // Preenche o formulário de login e clica em entrar
-      console.log('Preenchendo formulário de login...')
-      await page.type('#j_idt23', process.env.CONNECT_TRAVEL_USER, {
-        delay: 50
-      })
-      await page.type('#j_idt25', process.env.CONNECT_TRAVEL_PASSWORD, {
-        delay: 50
-      })
-      await page.click('#j_idt27')
+      await handleLogin(page)
 
-      // Aguarda redirecionamento para a página de validação do código ou página principal
-      console.log('Aguardando redirecionamento após login...')
-      // await page.waitForNavigation({ waitUntil: 'domcontentloaded' })
-      await delay(DEFAULT_DELAY)
-
-      const postLoginUrl = page.url()
-      if (postLoginUrl === process.env.CONNECT_TRAVEL_OTP_URL) {
-        console.log('Página de validação de código detectada...')
-        // Solicita o código ao cliente (input via terminal ou API)
-        const validationCode = await getUserInput(
-          'Digite o código de validação recebido por e-mail: '
-        )
-
-        // Insere o código e envia
-        console.log('Inserindo código de validação...')
-        await page.type('input[type="text"]', validationCode, { delay: 50 })
-        await page.click('button[type="submit"]')
-
-        // Aguarda redirecionamento para a página principal (home)
-        console.log('Validando código e aguardando redirecionamento...')
-        // await page.waitForNavigation({ waitUntil: 'domcontentloaded' })
-        await delay(DEFAULT_DELAY)
+      if (page.url() === process.env.CONNECT_TRAVEL_OTP_URL) {
+        await handleOTP(page)
       }
-
-      if (page.url() === process.env.CONNECT_TRAVEL_REDIRECT_URL) {
-        console.log('Autenticação finalizada com sucesso!')
-      } else {
-        throw new Error('Redirecionamento inesperado após a autenticação.')
-      }
-    } else if (currentUrl === process.env.CONNECT_TRAVEL_REDIRECT_URL) {
-      console.log(
-        'Usuário já autenticado, redirecionado diretamente para a página principal.'
-      )
-    } else {
-      console.log(currentUrl)
-      throw new Error('Redirecionamento inesperado ao acessar a URL base.')
     }
 
-    // Retorna a sessão autenticada
-    const clientCookies = await page.cookies()
-    return clientCookies
+    if (page.url() === process.env.CONNECT_TRAVEL_REDIRECT_URL) {
+      console.log('Autenticação finalizada com sucesso!')
+    } else {
+      throw new Error('Redirecionamento inesperado após a autenticação.')
+    }
+
+    return await page.cookies()
   } catch (error) {
     console.error('Erro no processo de autenticação:', error)
     throw error
@@ -125,123 +89,164 @@ export const authenticateUser = async (browser) => {
   }
 }
 
-export const loadSession = async (browser, cookies) => {
+const loadSession = async (browser, cookies) => {
   console.log('Reutilizando sessão autenticada...')
   const page = await browser.newPage()
-
-  try {
-    // Adiciona os cookies à nova página
-    await page.setCookie(...cookies)
-    console.log('Cookies carregados com sucesso.')
-
-    return page
-  } catch (error) {
-    console.error('Erro ao carregar sessão:', error)
-    throw error
-  }
+  await page.setCookie(...cookies)
+  return page
 }
 
-const handleFilterPage = async (page, frame, mealType) => {
-  console.log('Iniciando o processo de filtro e scraping...')
+const navigateToBooking = async (page) => {
+  console.log('Navegando para a página de booking...')
+  await page.goto(process.env.CONNECT_TRAVEL_REDIRECT_URL, {
+    waitUntil: 'networkidle0'
+  })
+  await waitForSelector(page, 'li[id="menuform:sm_leftmenu_2"] > a')
+  await page.click('#layout-menubar-resize')
+  await delay(DEFAULT_DELAY)
+  await page.click('.layout-menubar-container li:nth-of-type(3) > a')
+  await delay(DEFAULT_DELAY)
+}
 
-  try {
-    // Verifica se o elemento pai existe
-    const pnlResultadoHotel = await frame.$('#pnlResultadoHotel')
-    if (!pnlResultadoHotel) {
-      console.log('Elemento #pnlResultadoHotel não encontrado')
-      return []
-    }
+const fillBookingForm = async (
+  page,
+  frame,
+  destination,
+  checkInDate,
+  checkOutDate,
+  accommodationsCount,
+  adultCount
+) => {
+  console.log('Preenchendo formulário de booking...')
 
-    // Coleta os dados brutos dos cards
-    const cardsRawData = await frame.$$eval(
-      'span#pnlResultadoHotel > div:not(.paginacao)',
-      (cards, mealType) => {
-        return cards.map((card) => {
-          const name =
-            card.querySelector('.Fs22.hardblue')?.textContent.trim() || ''
-          const rooms = Array.from(card.querySelectorAll('.ui-g.Fs12.hoverQrt'))
-          const roomsData = rooms.map((room) => ({
-            mealText:
-              room.querySelector('.ui-g-11.ui-md-6.ui-lg-6')?.textContent || '',
-            priceText:
-              room
-                .querySelector('.ui-g-4.ui-md-3.ui-lg-3.TexAlRight')
-                ?.textContent?.trim() || ''
-          }))
-          return { name, roomsData, html: card.outerHTML }
-        })
-      },
-      mealType
+  const destinationModalSelector = '#frmMotorHotel\\:idDestinoHotel_panel'
+  const destinationModalClose = '.FontBold.Fs14.hardblue'
+  const destinationItemSelector =
+    '#frmMotorHotel\\:idDestinoHotel_panel tr.ui-autocomplete-item'
+
+  const bedroomsModalSelector =
+    '#frmMotorHotel .ui-panel.ui-widget.ui-widget-content.ui-corner-all.pnlConfigUh'
+  const bedroomsModalOpenSelector = '#frmMotorHotel .fakeInput > a'
+  const bedroomsModalCloseSelector =
+    '#frmMotorHotel .ui-overlaypanel-close.ui-state-default.btn-close-config-uh'
+  const bedroomsAddAccommodationInputSelector =
+    '#frmMotorHotel .ui-panel.ui-widget.ui-widget-content.ui-corner-all.pnlConfigUh table tbody tr:first-of-type td:nth-of-type(2) button'
+
+  const bedroomsAddAdultInputSelector = '#frmMotorHotel .fakeInput > a'
+
+  const destinationInputSelector = '#frmMotorHotel\\:idDestinoHotel_input'
+  const checkinInputSelector = '#frmMotorHotel\\:dtPartida_input'
+  const checkoutInputSelector = '#frmMotorHotel\\:dtRetorno_input'
+
+  await frame.type(destinationInputSelector, destination)
+  await waitForSelector(frame, destinationModalSelector, 30000)
+  await frame.click(destinationItemSelector)
+  await delay(DEFAULT_DELAY)
+
+  console.log('[CONCLUÍDO] - Preenchimento de: Destino')
+  await page.screenshot({ path: 'after-click-01.png' })
+
+  await frame.type(checkinInputSelector, checkInDate)
+  await frame.click(destinationModalClose)
+  await frame.type(checkoutInputSelector, checkOutDate)
+  await frame.click(destinationModalClose)
+  await delay(DEFAULT_DELAY)
+
+  console.log('[CONCLUÍDO] - Preenchimento de: Datas')
+  await page.screenshot({ path: 'after-click-02.png' })
+
+  await frame.click(bedroomsModalOpenSelector)
+  await delay(DEFAULT_DELAY)
+  await page.screenshot({ path: 'after-click-03.png' })
+  await waitForSelector(frame, bedroomsModalSelector, 30000)
+
+  for (let i = 1; i < accommodationsCount; i++) {
+    await frame.click(bedroomsAddAccommodationInputSelector)
+    await delay(500)
+  }
+
+  console.log('[CONCLUÍDO] - Preenchimento de: Apartamentos')
+  await page.screenshot({ path: 'after-click-04.png' })
+
+  await frame.click(bedroomsModalCloseSelector)
+
+  await delay(LONGER_DELAY)
+}
+
+const scrapeAccommodations = async (page, frame, mealType) => {
+  await page.screenshot({ path: 'after-click-05.png' })
+
+  console.log('Iniciando scraping de acomodações...')
+  await waitForSelector(frame, '#pnlTituloResultado', 30000)
+
+  const accommodations = await frame.evaluate((mealType) => {
+    const cards = document.querySelectorAll(
+      'span#pnlResultadoHotel > div:not(.paginacao)'
     )
+    const mealTypeMap = {
+      only_breakfast: 'Café da manhã',
+      half_meal: 'Meia pensão',
+      full_meal: 'Pensão completa'
+    }
+    const desiredMealType = mealTypeMap[mealType]
 
-    console.log(`Número de cards encontrados: ${cardsRawData.length}`)
-
-    // Processa os dados coletados
-    const processedData = cardsRawData
-      .map((cardData, index) => {
-        console.log(`Processando card ${index + 1}`)
-        console.log('OPÇÕES ===>', cardData.roomsData.length)
-        // console.log('CARD HTML ===>\n', cardData.html)
-
-        const mealTypeMap = {
-          only_breakfast: 'Café da manhã' || 'Breakfast',
-          half_meal: 'Meia pensão' || 'Half board',
-          full_meal: 'Pensão completa' || 'Full board'
-        }
-        const desiredMealType = mealTypeMap[mealType]
-
+    return Array.from(cards)
+      .map((card) => {
+        const name =
+          card.querySelector('.Fs22.hardblue')?.textContent.trim() || ''
+        const rooms = Array.from(card.querySelectorAll('.ui-g.Fs12.hoverQrt'))
         let lowestPrice = Infinity
         let selectedRoom = null
 
-        cardData.roomsData.forEach((room) => {
-          if (room.mealText.includes(desiredMealType)) {
-            const match = room.priceText.match(/R\$\s?([\d.,]+)/)
-            if (!match) return
+        rooms.forEach((room) => {
+          const mealText =
+            room.querySelector('.ui-g-11.ui-md-6.ui-lg-6')?.textContent || ''
+          const priceText =
+            room
+              .querySelector('.ui-g-4.ui-md-3.ui-lg-3.TexAlRight')
+              ?.textContent?.trim() || ''
 
-            const valueString = match[1]
-
-            const floatValue = parseFloat(
-              valueString.replace(/\./g, '').replace(',', '.')
-            )
-
-            if (floatValue < lowestPrice) {
-              lowestPrice = floatValue
-              selectedRoom = room
+          if (mealText.includes(desiredMealType)) {
+            const match = priceText.match(/R\$\s?([\d.,]+)/)
+            if (match) {
+              const price = parseFloat(
+                match[1].replace(/\./g, '').replace(',', '.')
+              )
+              if (price < lowestPrice) {
+                lowestPrice = price
+                selectedRoom = { mealText, price }
+              }
             }
           }
         })
 
         if (selectedRoom) {
           return {
-            accommodationName: cardData.name,
-            accommodationPrice: `R$ ${lowestPrice.toFixed(2)}`,
+            accommodationName: name,
+            accommodationPrice: `R$ ${selectedRoom.price.toFixed(2)}`,
             accommodationMeal: desiredMealType,
             accommodationProvider: 'Connect Travel'
           }
         }
-
         return null
       })
-      .filter((data) => data !== null)
+      .filter((item) => item !== null)
+  }, mealType)
 
-    console.log(`Total de cards processados: ${processedData.length}`)
-    return processedData
-  } catch (error) {
-    console.error('Erro ao processar a página:', error)
-    return []
-  }
+  console.log(`Total de acomodações encontradas: ${accommodations.length}`)
+  return accommodations
 }
 
 const executeScraping = async (
   checkInDate,
   checkOutDate,
+  accommodationsCount,
   filterAdults,
   filterChilds,
   mealType
 ) => {
-  console.log('Iniciando o scraping com fluxo de autenticação...')
+  console.log('Iniciando o processo de scraping...')
 
-  // Configura o diretório para armazenar dados do usuário
   const __filename = fileURLToPath(import.meta.url)
   const __dirname = path.dirname(__filename)
   const userDataDir = path.join(__dirname, 'user_data')
@@ -255,118 +260,33 @@ const executeScraping = async (
   })
 
   try {
-    // 1. Realiza o login e autenticação (uma única vez)
     const clientCookies = await authenticateUser(browser)
-
-    // 2. Reutiliza a sessão para novas operações
     const page = await loadSession(browser, clientCookies)
 
-    // 3. Executa operações na página autenticada
-    console.log('Acessando a página principal usando a sessão existente...')
-    await page.goto(process.env.CONNECT_TRAVEL_REDIRECT_URL, {
-      waitUntil: 'domcontentloaded'
-    })
+    await navigateToBooking(page)
 
-    console.log('Executando operações pós-autenticação...')
-
-    await page.waitForSelector('li[id="menuform:sm_leftmenu_2"] > a')
-
-    const buttonText = await page.evaluate((sel) => {
-      const element = document.querySelector(sel)
-      return element ? element.textContent.trim() : null
-    }, 'li[id="menuform:sm_leftmenu_2"] > a')
-
-    console.log(
-      '[SUCESSO] - Botão Booking encontrado! Texto obtido: ',
-      buttonText
-    )
-
-    await page.click('#layout-menubar-resize')
-    await delay(DEFAULT_DELAY)
-
-    await page.click('.layout-menubar-container li:nth-of-type(3) > a')
-    await delay(DEFAULT_DELAY)
-
-    console.log(
-      '[SUCESSO] - Botão Booking clicado! Aguardando confirmação de redirecionamento'
-    )
-
-    // =========================================================================== INÍCIO LÓGICA IFRAME
-
-    await page.waitForSelector('iframe[name="myiFrame"]', {
-      visible: true,
-      timeout: 30000
-    })
     const frame = await page.frames().find((f) => f.name() === 'myiFrame')
-    await frame.waitForSelector('#frmMotorHotel', {
-      visible: true,
-      timeout: 30000
-    })
+    await fillBookingForm(
+      page,
+      frame,
+      'Olimpia',
+      checkInDate,
+      checkOutDate,
+      accommodationsCount,
+      filterAdults
+    )
 
-    console.log('[SUCESSO] - Página de booking acessada')
-
-    // **1. Localizar e digitar no campo de destino**
-    const destinationInputSelector =
-      '#frmMotorHotel .ui-g input.ui-inputfield:nth-of-type(1)'
-    const checkinInputSelector =
-      '#frmMotorHotel .ui-g input[placeholder="Check-in"]'
-    const checkoutInputSelector =
-      '#frmMotorHotel .ui-g input[placeholder="Check-out"]'
-
-    await frame.type(destinationInputSelector, 'Olimpia')
-    console.log('Campo localizado. Digitado "Olimpia"...')
-
-    // **2. Aguardar a abertura do modal**
-    const modalSelector = '#frmMotorHotel\\:idDestinoHotel_panel' // Selector direto do modal
-    console.log('Aguardando o modal abrir...')
-    await frame.waitForSelector(modalSelector, { visible: true })
-    console.log('Modal encontrado e visível.')
-
-    // await page.screenshot({ path: 'after-click-01.png' })
-
-    // **3. Selecionar o primeiro elemento na lista do modal**
-    const firstItemSelector = `${modalSelector} tr.ui-autocomplete-item` // Seleção do primeiro item no modal
-    console.log('Localizando o primeiro item na lista...')
-    await frame.waitForSelector(firstItemSelector, { visible: true })
-    console.log('Primeiro item localizado.')
-
-    // Clique no primeiro item
-    console.log('Clicando no primeiro item...')
-    await frame.click(firstItemSelector)
-
-    // **4. Aguardar 2 segundos**
-    console.log('Aguardando 2 segundos...')
-    await delay(DEFAULT_DELAY)
-    console.log('Processo concluído!')
-
-    await frame.type(checkinInputSelector, checkInDate)
-    await frame.type(checkoutInputSelector, checkOutDate)
-
-    await frame.click('.pnlBotaoPesquisa button[type="submit"]')
-    console.log('[SUCESSO] - Formulário de pesquisa enviado!')
-
-    await delay(LONGER_DELAY)
-    // await page.screenshot({ path: 'after-click-01.png' })
-
-    await frame.waitForSelector('#pnlTituloResultado', {
-      visible: true,
-      timeout: 30000
-    })
-
-    console.log('[SUCESSO] - Resultados encontrados!')
-
-    const accommodations = await handleFilterPage(page, frame, mealType)
-
-    // =========================================================================== FIM LÓGICA IFRAME
+    const accommodations = await scrapeAccommodations(page, frame, mealType)
 
     return {
-      filterAdults: filterAdults,
-      filterChilds: filterChilds,
+      filterAdults,
+      filterChilds,
       filterDateRange: `${checkInDate} a ${checkOutDate}`,
       filterResults: accommodations
     }
   } catch (error) {
     console.error('Erro no fluxo de scraping:', error)
+    throw error
   } finally {
     await browser.close()
     console.log('Browser fechado.')
@@ -376,12 +296,20 @@ const executeScraping = async (
 // ========================================== CONNECT TRAVEL
 
 export const findAccommodationsOnConnectTravel = async (req, res) => {
-  const { checkInDate, checkOutDate, days, adultCount, childsAges, mealType } =
-    req.query
+  const {
+    checkInDate,
+    checkOutDate,
+    accommodationsCount,
+    days,
+    adultCount,
+    childsAges,
+    mealType
+  } = req.query
 
   try {
     // const response = await executeScraping(
     //   checkInDate,
+    //   accommodationsCount,
     //   checkOutDate,
     //   parseInt(adultCount),
     //   childsAges ? childsAges.split(',').length : 0,
@@ -390,6 +318,7 @@ export const findAccommodationsOnConnectTravel = async (req, res) => {
     const response = await executeScraping(
       '11/12/2024',
       '12/12/2024',
+      2,
       2,
       0,
       'only_breakfast'
