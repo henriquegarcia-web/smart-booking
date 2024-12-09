@@ -11,16 +11,17 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    assetsDir: './',
     sourcemap: true
-  },
-  server: {
-    port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:5000',
-        changeOrigin: true,
-        secure: false
-      }
-    }
   }
+  // server: {
+  //   port: 5173,
+  //   proxy: {
+  //     '/api': {
+  //       target: 'http://localhost:5000',
+  //       changeOrigin: true,
+  //       secure: false
+  //     }
+  //   }
+  // }
 })

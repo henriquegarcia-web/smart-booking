@@ -11,7 +11,9 @@ const allowedOrigins = [
   'https://18.118.128.178',
   'http://18.118.128.178',
   'http://localhost:5173',
-  process.env.CLIENT_CORS_ALLOW_URL
+  process.env.CLIENT_CORS_ALLOW_URL,
+  process.env.CLIENT_CORS_ALLOW_URL_1,
+  process.env.CLIENT_CORS_ALLOW_URL_2
 ]
 
 const corsOptions = {
