@@ -35,7 +35,8 @@ const formatBookingData = (bookingData: ISearchForm): IFilterData => {
     childsAges,
     mealType: bookingData.mealType,
     unavailable: true,
-    discount: bookingData.discountRate
+    discount: bookingData.discountRate,
+    accommodationsCount: bookingData.apartments.length
   }
 }
 

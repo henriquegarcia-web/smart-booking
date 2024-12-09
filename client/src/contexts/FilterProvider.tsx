@@ -21,6 +21,7 @@ export interface IFilterData {
   mealType?: string
   unavailable?: boolean
   discount?: number
+  accommodationsCount?: number
 }
 
 export interface IAccommodation {

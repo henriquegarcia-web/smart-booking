@@ -10,10 +10,11 @@ const fetchAccommodations = async (filterData: IFilterData) => {
       adultCount,
       childsAges,
       mealType,
-      unavailable
+      unavailable,
+      accommodationsCount
     } = filterData
 
-    const response = await api.get('/filter/accommodations/travel-xs', {
+    const response = await api.get('/filter/accommodations', {
       params: {
         checkInDate,
         checkOutDate,
@@ -21,7 +22,8 @@ const fetchAccommodations = async (filterData: IFilterData) => {
         adultCount,
         childsAges: childsAges.join(','),
         mealType,
-        unavailable
+        unavailable,
+        accommodationsCount
       }
     })
     return response.data

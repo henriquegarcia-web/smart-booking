@@ -33,25 +33,25 @@ const formatResponseData = (
 
 // Nova função unificada para buscar acomodações
 export const findAccommodations = async (req, res) => {
-  // const {
-  //   checkInDate,
-  //   checkOutDate,
-  //   days,
-  //   adultCount,
-  //   childsAges,
-  //   mealType,
-  //   unavailable,
-  //   accommodationsCount
-  // } = req.query
+  const {
+    checkInDate,
+    checkOutDate,
+    days,
+    adultCount,
+    childsAges,
+    mealType,
+    unavailable,
+    accommodationsCount
+  } = req.query
 
-  const checkInDate = '12/12/2024'
-  const checkOutDate = '14/12/2024'
-  const days = '2'
-  const adultCount = '2'
-  const childsAges = ''
-  const mealType = 'only_breakfast'
-  const unavailable = 'true'
-  const accommodationsCount = 1
+  // const checkInDate = '12/12/2024'
+  // const checkOutDate = '14/12/2024'
+  // const days = '2'
+  // const adultCount = '2'
+  // const childsAges = ''
+  // const mealType = 'only_breakfast'
+  // const unavailable = 'true'
+  // const accommodationsCount = 1
 
   if (!checkInDate || !checkOutDate || !days || !adultCount) {
     return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
