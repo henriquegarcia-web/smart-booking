@@ -4,6 +4,7 @@ import readline from 'readline'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { io } from '../../server.js'
 
 // await page.screenshot({ path: 'after-click-02.png' })
 
@@ -20,18 +21,18 @@ const waitForSelector = async (page, selector, timeout = 30000) => {
   console.log(`Elemento "${selector}" encontrado.`)
 }
 
-const getUserInput = (query) => {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  })
-  return new Promise((resolve) =>
-    rl.question(query, (answer) => {
-      rl.close()
-      resolve(answer)
-    })
-  )
-}
+// const getUserInput = (query) => {
+//   const rl = readline.createInterface({
+//     input: process.stdin,
+//     output: process.stdout
+//   })
+//   return new Promise((resolve) =>
+//     rl.question(query, (answer) => {
+//       rl.close()
+//       resolve(answer)
+//     })
+//   )
+// }
 
 const handleLogin = async (page) => {
   console.log('Iniciando processo de login...')
@@ -43,14 +44,41 @@ const handleLogin = async (page) => {
   await delay(DEFAULT_DELAY)
 }
 
+// const handleOTP = async (page) => {
+//   console.log('Página de validação de código detectada...')
+//   const validationCode = await getUserInput(
+//     'Digite o código de validação recebido por e-mail: '
+//   )
+//   await page.type('input[type="text"]', validationCode, { delay: 50 })
+//   await page.click('button[type="submit"]')
+//   await delay(DEFAULT_DELAY)
+// }
+
 const handleOTP = async (page) => {
   console.log('Página de validação de código detectada...')
-  const validationCode = await getUserInput(
-    'Digite o código de validação recebido por e-mail: '
-  )
-  await page.type('input[type="text"]', validationCode, { delay: 50 })
-  await page.click('button[type="submit"]')
-  await delay(DEFAULT_DELAY)
+
+  return new Promise((resolve) => {
+    io.emit('enterOTP')
+
+    const checkOTP = setInterval(() => {
+      const connectedSockets = Array.from(io.sockets.sockets.values())
+      for (const socket of connectedSockets) {
+        if (socket.otp) {
+          clearInterval(checkOTP)
+          const validationCode = socket.otp
+          socket.otp = null // Limpa o OTP após o uso
+
+          page
+            .type('input[type="text"]', validationCode, { delay: 50 })
+            .then(() => page.click('button[type="submit"]'))
+            .then(() => delay(DEFAULT_DELAY))
+            .then(resolve)
+
+          break
+        }
+      }
+    }, 1000) // Verifica a cada segundo
+  })
 }
 
 const authenticateUser = async (browser) => {
@@ -94,7 +122,7 @@ const authenticateUser = async (browser) => {
 const loadSession = async (browser, cookies) => {
   console.log('Reutilizando sessão autenticada...')
   const page = await browser.newPage()
-  // await page.setCookie(...cookies)
+  await page.setCookie(...cookies)
   return page
 }
 
@@ -227,7 +255,7 @@ const scrapeAccommodations = async (page, frame, mealType) => {
               accommodationName: name,
               accommodationPrice: `R$ ${selectedRoom.price.toFixed(2)}`,
               accommodationMeal: desiredMealType,
-              accommodationProvider: 'Connect Travel'
+              accommodationProvider: 'connect_travel'
             }
           }
           return null
@@ -299,8 +327,8 @@ export const executeScraping = async (
   }
 
   const browser = await puppeteer.launch({
-    headless: true
-    // userDataDir
+    headless: true,
+    userDataDir
   })
 
   try {

@@ -10,7 +10,7 @@ import dayjs, { Dayjs } from 'dayjs'
 import 'dayjs/locale/pt-br'
 dayjs.locale('pt-br')
 
-import { SearchAcommodationForm, ViewHeader } from '@/components'
+import { OTPForm, SearchAcommodationForm, ViewHeader } from '@/components'
 import {
   applyDiscount,
   formatTextToCurrency
@@ -30,6 +30,7 @@ import { discountRate } from '@/data/admin'
 import { FiDownload } from 'react-icons/fi'
 import { saveAs } from 'file-saver'
 import { toast } from 'react-toastify'
+import { socket } from '@/components/OTPForm'
 
 const items: CollapseProps['items'] = [
   {
@@ -112,7 +113,7 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
       accommodationName: accommodation?.accommodationName || '',
       accommodationPrice:
         applyDiscount(
-          accommodation?.accommodationPrice || '',
+          accommodation?.accommodationPrice.toString() || '',
           selectedDiscount || 0
         ) || '',
       accommodationMeal: accommodation?.accommodationMeal || ''
@@ -162,6 +163,11 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
     }
   }
 
+  // const triggerOTPManually = () => {
+  //   console.log('Simulando evento requestOTP')
+  //   socket.emit('requestOTP')
+  // }
+
   return (
     <S.AccommodationSearchView>
       <ViewHeader
@@ -188,6 +194,7 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
         >
           Exportar Dados
         </Button>
+        {/* <Button onClick={triggerOTPManually}>Testar OTP</Button> */}
       </ViewHeader>
 
       <Collapse items={items} />
@@ -202,6 +209,8 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
           }}
         />
       </ConfigProvider>
+
+      <OTPForm />
     </S.AccommodationSearchView>
   )
 }

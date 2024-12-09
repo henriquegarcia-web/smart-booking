@@ -1,6 +1,8 @@
 import express from 'express'
 import bodyParser from 'body-parser'
 import cors from 'cors'
+import http from 'http'
+import { Server } from 'socket.io'
 import routes from './routes/index.js'
 
 const allowedOrigins = [
@@ -35,7 +37,12 @@ const corsOptions = {
   optionsSuccessStatus: 204
 }
 
+// const app = express()
 const app = express()
+const server = http.createServer(app)
+const io = new Server(server, {
+  cors: corsOptions
+})
 
 // Middleware de CORS
 app.use(cors(corsOptions))
@@ -51,4 +58,25 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'Teste bem-sucedido! O servidor está funcionando.' })
 })
 
-export default app
+// Configuração do Socket.IO
+io.on('connection', (socket) => {
+  console.log('Um cliente se conectou')
+
+  socket.on('requestOTP', (callback) => {
+    console.log('Solicitação de OTP recebida')
+    socket.emit('enterOTP')
+    console.log('Evento enterOTP emitido')
+  })
+
+  // socket.on('requestOTP', (callback) => {
+  //   // Emite um evento para o cliente solicitando o código OTP
+  //   socket.emit('enterOTP')
+  // })
+
+  socket.on('submitOTP', (otp) => {
+    // Armazena o OTP recebido
+    socket.otp = otp
+  })
+})
+
+export { app, server, io }

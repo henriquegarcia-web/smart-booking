@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import * as S from './styles'
 
-import { ViewHeader } from '@/components'
+import { OTPForm, ViewHeader } from '@/components'
 import {
   Button,
   Form,
@@ -81,7 +81,7 @@ const ConnectTravelAuthentication = () => {
           <Tag>Autenticado</Tag>
         </S.CTAuthenticationStatus>
       </S.CTAuthenticationInfos>
-      <S.CTAuthenticationForm onFinish={handleSubmit(onSubmit)}>
+      {/* <S.CTAuthenticationForm onFinish={handleSubmit(onSubmit)}>
         <Controller
           name="otp"
           control={control}
@@ -92,7 +92,7 @@ const ConnectTravelAuthentication = () => {
         <Button htmlType="submit" disabled={!isValid} loading={isSubmitting}>
           Validar
         </Button>
-      </S.CTAuthenticationForm>
+      </S.CTAuthenticationForm> */}
     </S.CTAuthentication>
   )
 }

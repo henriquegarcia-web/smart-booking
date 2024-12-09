@@ -33,14 +33,14 @@ const adminMenusData: IMenu[] = [
 ]
 
 const superAdminMenusData: IMenu[] = [
-  {
-    menuId: 'settings-menu',
-    menuLabel: 'Configurações',
-    menuComponent: <SettingsView />,
-    menuIcon: <FiSettings />,
-    menuDisable: false,
-    menuVisible: true
-  }
+  // {
+  //   menuId: 'settings-menu',
+  //   menuLabel: 'Configurações',
+  //   menuComponent: <SettingsView />,
+  //   menuIcon: <FiSettings />,
+  //   menuDisable: false,
+  //   menuVisible: true
+  // }
 ]
 
 export { menusData, adminMenusData, superAdminMenusData }

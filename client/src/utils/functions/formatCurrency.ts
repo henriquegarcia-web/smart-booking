@@ -52,14 +52,27 @@ const applyDiscount = (value, discount, withPercent = true) => {
     throw new Error('Percentual de desconto deve estar entre 0 e 7')
   }
 
-  const valorNumerico = parseFloat(
-    value.replace('R$ ', '').replace('.', '').replace(',', '.')
-  )
+  const first = value.replace('R$ ', '').replace('.', '').replace(',', '.')
 
-  const desconto = valorNumerico * (discount / 100)
-  const valorComDesconto = valorNumerico - desconto
+  const incomingValue = parseFloat(first.slice(0, -2) + '.' + first.slice(-2))
+  console.log(incomingValue)
 
-  const formattedValue = formatTextToCurrency(valorComDesconto.toString())
+  // if (typeof value === 'string') {
+  //   incomingValue = parseFloat(
+  //     value.replace('R$ ', '').replace('.', '').replace(',', '.')
+  //   )
+  //   // incomingValue = parseFloat(value.replace(/[^\d,]/g, '').replace(',', '.'))
+  // } else if (typeof value === 'number') {
+  //   const formattedToString = value.toString()
+  //   incomingValue =
+  // } else {
+  //   throw new Error('O valor deve ser uma string ou um número')
+  // }
+
+  const desconto = incomingValue * (discount / 100)
+  const valorComDesconto = incomingValue - desconto
+
+  const formattedValue = formatCurrency(valorComDesconto)
   if (withPercent)
     return `${formattedValue}${discount > 0 ? ` (${discount}%)` : ''}`
   return formattedValue
