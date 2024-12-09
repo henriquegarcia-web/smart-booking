@@ -5,7 +5,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-await page.screenshot({ path: 'after-click-02.png' })
+// await page.screenshot({ path: 'after-click-02.png' })
 
 dotenv.config()
 
@@ -175,68 +175,181 @@ const fillBookingForm = async (
   await delay(LONGER_DELAY)
 }
 
-const scrapeAccommodations = async (page, frame, mealType) => {
-  // await page.screenshot({ path: 'after-click-05.png' })
+// const scrapeAccommodations = async (page, frame, mealType) => {
+//   // await page.screenshot({ path: 'after-click-05.png' })
 
+//   console.log('Iniciando scraping de acomodações...')
+//   await waitForSelector(frame, '#pnlTituloResultado', 30000)
+
+//   const accommodations = await frame.evaluate((mealType) => {
+//     const paginationSelector = 'span#pnlResultadoHotel > div.paginacao'
+//     const paginationOptionSelector =
+//       'span#pnlResultadoHotel > div.paginacao > table > tbody > tr > td'
+
+//     const cards = document.querySelectorAll(
+//       'span#pnlResultadoHotel > div:not(.paginacao)'
+//     )
+//     const pagination = document.querySelector(paginationSelector)
+//     const paginationLength = document.querySelectorAll(paginationOptionSelector)
+
+//     const mealTypeMap = {
+//       only_breakfast: 'Café da manhã',
+//       half_meal: 'Meia pensão',
+//       full_meal: 'Pensão completa'
+//     }
+//     const desiredMealType = mealTypeMap[mealType]
+
+//     return Array.from(cards)
+//       .map((card) => {
+//         const name =
+//           card.querySelector('.Fs22.hardblue')?.textContent.trim() || ''
+//         const rooms = Array.from(card.querySelectorAll('.ui-g.Fs12.hoverQrt'))
+//         let lowestPrice = Infinity
+//         let selectedRoom = null
+
+//         rooms.forEach((room) => {
+//           const mealText =
+//             room.querySelector('.ui-g-11.ui-md-6.ui-lg-6')?.textContent || ''
+//           const priceText =
+//             room
+//               .querySelector('.ui-g-4.ui-md-3.ui-lg-3.TexAlRight')
+//               ?.textContent?.trim() || ''
+
+//           if (mealText.includes(desiredMealType)) {
+//             const match = priceText.match(/R\$\s?([\d.,]+)/)
+//             if (match) {
+//               const price = parseFloat(
+//                 match[1].replace(/\./g, '').replace(',', '.')
+//               )
+//               if (price < lowestPrice) {
+//                 lowestPrice = price
+//                 selectedRoom = { mealText, price }
+//               }
+//             }
+//           }
+//         })
+
+//         if (selectedRoom) {
+//           return {
+//             accommodationName: name,
+//             accommodationPrice: `R$ ${selectedRoom.price.toFixed(2)}`,
+//             accommodationMeal: desiredMealType,
+//             accommodationProvider: 'Connect Travel'
+//           }
+//         }
+//         return null
+//       })
+//       .filter((item) => item !== null)
+//   }, mealType)
+
+//   console.log(`Total de acomodações encontradas: ${accommodations.length}`)
+//   return accommodations
+// }
+
+const scrapeAccommodations = async (page, frame, mealType) => {
   console.log('Iniciando scraping de acomodações...')
   await waitForSelector(frame, '#pnlTituloResultado', 30000)
 
-  const accommodations = await frame.evaluate((mealType) => {
-    const cards = document.querySelectorAll(
-      'span#pnlResultadoHotel > div:not(.paginacao)'
-    )
-    const mealTypeMap = {
-      only_breakfast: 'Café da manhã',
-      half_meal: 'Meia pensão',
-      full_meal: 'Pensão completa'
-    }
-    const desiredMealType = mealTypeMap[mealType]
+  const getAllAccommodations = async () => {
+    return await frame.evaluate((mealType) => {
+      const mealTypeMap = {
+        only_breakfast: 'Café da manhã',
+        half_meal: 'Meia pensão',
+        full_meal: 'Pensão completa'
+      }
+      const desiredMealType = mealTypeMap[mealType]
 
-    return Array.from(cards)
-      .map((card) => {
-        const name =
-          card.querySelector('.Fs22.hardblue')?.textContent.trim() || ''
-        const rooms = Array.from(card.querySelectorAll('.ui-g.Fs12.hoverQrt'))
-        let lowestPrice = Infinity
-        let selectedRoom = null
+      const cards = document.querySelectorAll(
+        'span#pnlResultadoHotel > div:not(.paginacao)'
+      )
 
-        rooms.forEach((room) => {
-          const mealText =
-            room.querySelector('.ui-g-11.ui-md-6.ui-lg-6')?.textContent || ''
-          const priceText =
-            room
-              .querySelector('.ui-g-4.ui-md-3.ui-lg-3.TexAlRight')
-              ?.textContent?.trim() || ''
+      return Array.from(cards)
+        .map((card) => {
+          const name =
+            card.querySelector('.Fs22.hardblue')?.textContent.trim() || ''
+          const rooms = Array.from(card.querySelectorAll('.ui-g.Fs12.hoverQrt'))
+          let lowestPrice = Infinity
+          let selectedRoom = null
 
-          if (mealText.includes(desiredMealType)) {
-            const match = priceText.match(/R\$\s?([\d.,]+)/)
-            if (match) {
-              const price = parseFloat(
-                match[1].replace(/\./g, '').replace(',', '.')
-              )
-              if (price < lowestPrice) {
-                lowestPrice = price
-                selectedRoom = { mealText, price }
+          rooms.forEach((room) => {
+            const mealText =
+              room.querySelector('.ui-g-11.ui-md-6.ui-lg-6')?.textContent || ''
+            const priceText =
+              room
+                .querySelector('.ui-g-4.ui-md-3.ui-lg-3.TexAlRight')
+                ?.textContent?.trim() || ''
+
+            if (mealText.includes(desiredMealType)) {
+              const match = priceText.match(/R\$\s?([\d.,]+)/)
+              if (match) {
+                const price = parseFloat(
+                  match[1].replace(/\./g, '').replace(',', '.')
+                )
+                if (price < lowestPrice) {
+                  lowestPrice = price
+                  selectedRoom = { mealText, price }
+                }
               }
             }
+          })
+
+          if (selectedRoom) {
+            return {
+              accommodationName: name,
+              accommodationPrice: `R$ ${selectedRoom.price.toFixed(2)}`,
+              accommodationMeal: desiredMealType,
+              accommodationProvider: 'Connect Travel'
+            }
           }
+          return null
         })
+        .filter((item) => item !== null)
+    }, mealType)
+  }
 
-        if (selectedRoom) {
-          return {
-            accommodationName: name,
-            accommodationPrice: `R$ ${selectedRoom.price.toFixed(2)}`,
-            accommodationMeal: desiredMealType,
-            accommodationProvider: 'Connect Travel'
-          }
+  const getPageCount = async () => {
+    return await frame.evaluate(() => {
+      const paginationOptionSelector =
+        'span#pnlResultadoHotel > div.paginacao > table > tbody > tr > td'
+      const paginationOptions = document.querySelectorAll(
+        paginationOptionSelector
+      )
+
+      if (paginationOptions.length <= 5) {
+        return 1
+      } else {
+        return paginationOptions.length - 4
+      }
+    })
+  }
+
+  const pageCount = await getPageCount()
+  console.log(`Total de páginas: ${pageCount}`)
+
+  let allAccommodations = []
+
+  for (let i = 0; i < pageCount; i++) {
+    console.log(`Scraping página ${i + 1} de ${pageCount}`)
+
+    const pageAccommodations = await getAllAccommodations()
+    allAccommodations = allAccommodations.concat(pageAccommodations)
+
+    if (i < pageCount - 1) {
+      await frame.evaluate(() => {
+        const nextPageButton = document.querySelector(
+          'span#pnlResultadoHotel > div.paginacao > table > tbody > tr > td:nth-last-child(2)'
+        )
+        if (nextPageButton) {
+          nextPageButton.click()
         }
-        return null
       })
-      .filter((item) => item !== null)
-  }, mealType)
 
-  console.log(`Total de acomodações encontradas: ${accommodations.length}`)
-  return accommodations
+      await delay(DEFAULT_DELAY)
+    }
+  }
+
+  console.log(`Total de acomodações encontradas: ${allAccommodations.length}`)
+  return allAccommodations
 }
 
 export const executeScraping = async (
