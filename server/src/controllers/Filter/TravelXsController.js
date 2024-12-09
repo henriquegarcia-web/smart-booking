@@ -5,7 +5,7 @@ dotenv.config()
 
 // ========================================== TRAVELXS
 
-const authenticateTravelXs = async (user, password) => {
+export const authenticateTravelXs = async (user, password) => {
   try {
     const response = await axios({
       method: 'post',
@@ -217,7 +217,7 @@ const getMealTypeDescription = (mealType) => {
 }
 
 // Função separada para buscar os dados de hospedagem
-const fetchAccommodationsData = async (
+export const fetchAccommodationsData = async (
   token,
   checkInDate,
   checkOutDate,
@@ -327,15 +327,25 @@ const fetchAccommodationsData = async (
 }
 
 export const findAccommodationsOnTravelXs = async (req, res) => {
-  const {
-    checkInDate,
-    checkOutDate,
-    days,
-    adultCount,
-    childsAges,
-    mealType,
-    unavailable
-  } = req.query
+  // const {
+  //   checkInDate,
+  //   checkOutDate,
+  //   days,
+  //   adultCount,
+  //   childsAges,
+  //   mealType,
+  //   unavailable
+  // } = req.query
+
+  // console.log(req.query)
+
+  const checkInDate = '12/12/2024'
+  const checkOutDate = '14/12/2024'
+  const days = '2'
+  const adultCount = '2'
+  const childsAges = ''
+  const mealType = 'only_breakfast'
+  const unavailable = 'true'
 
   if (!checkInDate || !checkOutDate || !days || !adultCount) {
     return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })

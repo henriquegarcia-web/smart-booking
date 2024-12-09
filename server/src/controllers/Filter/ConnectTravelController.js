@@ -61,6 +61,8 @@ const authenticateUser = async (browser) => {
     await page.goto(process.env.CONNECT_TRAVEL_BASE_URL, {
       waitUntil: 'networkidle0'
     })
+    await delay(DEFAULT_DELAY)
+
     const currentUrl = page.url()
 
     if (
@@ -68,10 +70,10 @@ const authenticateUser = async (browser) => {
       currentUrl === process.env.CONNECT_TRAVEL_LOGIN_URL
     ) {
       await handleLogin(page)
+    }
 
-      if (page.url() === process.env.CONNECT_TRAVEL_OTP_URL) {
-        await handleOTP(page)
-      }
+    if (page.url() === process.env.CONNECT_TRAVEL_OTP_URL) {
+      await handleOTP(page)
     }
 
     if (page.url() === process.env.CONNECT_TRAVEL_REDIRECT_URL) {
@@ -237,7 +239,7 @@ const scrapeAccommodations = async (page, frame, mealType) => {
   return accommodations
 }
 
-const executeScraping = async (
+export const executeScraping = async (
   checkInDate,
   checkOutDate,
   accommodationsCount,
