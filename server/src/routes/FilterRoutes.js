@@ -23,11 +23,13 @@ export default router
     Colocar uma awaitforselector de forma otimizada no código e
     ver se resolve
 
-    pedir para IA otimizar código
-    remover imagens
+    // pedir para IA otimizar código
+    // remover imagens
 
+    
     criar validação para quando uma das respoonse vem zerada
-
+    
     // modal de validação do código nao pdoe ser fechavel
-
- */
+    
+    remover codigos padrao de chamada req
+*/

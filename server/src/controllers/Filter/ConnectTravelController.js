@@ -146,6 +146,16 @@ const authenticateUser = async (browser) => {
 const loadSession = async (browser, cookies) => {
   console.log('Reutilizando sessão autenticada...')
   const page = await browser.newPage()
+
+  await page.setRequestInterception(true)
+  page.on('request', (request) => {
+    if (['image', 'font'].includes(request.resourceType())) {
+      request.abort()
+    } else {
+      request.continue()
+    }
+  })
+
   await page.setCookie(...cookies)
   return page
 }
@@ -200,12 +210,6 @@ const fillBookingForm = async (
 
   console.log('[CONCLUÍDO] - Preenchimento de: Destino')
 
-  console.log(
-    '[XXXXXXXXXXX] -',
-    checkInDate.toString(),
-    checkOutDate.toString()
-  )
-
   await frame.type(checkinInputSelector, checkInDate.toString())
   await frame.click(destinationModalClose)
   await frame.click(checkoutInputSelector)
@@ -235,13 +239,13 @@ const fillBookingForm = async (
 
   const foiOuNao = await waitForSelector(frame, '#pnlTituloResultado', 10000)
 
-  await page.screenshot({ path: 'after-click-01.png' })
+  // await page.screenshot({ path: 'after-click-01.png' })
 
   if (!foiOuNao) {
     await frame.click('#pnlVenda .pnlBotaoPesquisa button')
     await delay(LONGER_DELAY)
 
-    await page.screenshot({ path: 'after-click-02.png' })
+    // await page.screenshot({ path: 'after-click-02.png' })
   }
 }
 
@@ -249,7 +253,7 @@ const scrapeAccommodations = async (page, frame, mealType) => {
   console.log('Iniciando scraping de acomodações...')
   // await delay(2000)
 
-  await page.screenshot({ path: 'after-click-03.png' })
+  // await page.screenshot({ path: 'after-click-03.png' })
 
   await waitForSelector(frame, '#pnlTituloResultado', 60000)
 
@@ -374,7 +378,15 @@ export const executeScraping = async (
 
   const browser = await puppeteer.launch({
     headless: true,
-    userDataDir
+    userDataDir,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--disable-gpu',
+      '--window-size=1920x1080'
+    ]
   })
 
   try {
