@@ -21,11 +21,13 @@ import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import {
   discountRate,
   filterCountsLimit,
+  filterModeSchemeData,
+  IFilterMode,
   pensionSchemeData
 } from '@/data/admin'
 import { formatBookingData } from '@/utils/functions/formatBookingData'
 import { useFilter } from '@/contexts/FilterProvider'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 const ApartmentSchema = Yup.object().shape({
   adultCount: Yup.number()
@@ -99,7 +101,8 @@ interface ISearchAccommodationForm {}
 
 const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
   const { token } = theme.useToken()
-  const { handleFilter, filterResults } = useFilter()
+  const { handleFilter, filterResults, filterMode, handleChangeFilterMode } =
+    useFilter()
 
   const {
     control,
@@ -135,6 +138,11 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
     const formattedData = formatBookingData(data)
     const response = await handleFilter(formattedData)
   }
+
+  const formattedFilterModeScheme = filterModeSchemeData.map((role) => ({
+    value: role.modeId,
+    label: role.modeLabel
+  }))
 
   const formattedPensionScheme = pensionSchemeData.map((role) => ({
     value: role.schemeId,
@@ -230,25 +238,6 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
             )}
           />
         </S.FormInputMealTypeWrapper>
-        {/* <Controller
-          name="discountRate"
-          control={control}
-          render={({ field }) => (
-            <Form.Item
-              label="Desconto (Opcional)"
-              validateStatus={!!errors.discountRate ? 'error' : ''}
-              help={errors?.discountRate?.message || null}
-            >
-              <Select
-                {...field}
-                placeholder="Selecione uma opção"
-                options={formattedDiscountRates}
-                allowClear
-                disabled={filterResults?.isLoading || false}
-              />
-            </Form.Item>
-          )}
-        /> */}
       </S.MainFormWrapper>
 
       <S.ApartmentsFormWrapper>
@@ -361,7 +350,6 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                         defaultValue={0}
                         render={({ field }) => (
                           <Form.Item
-                            // label={`Criança ${childIndex + 1}`}
                             validateStatus={
                               errors.apartments?.[index]?.childrenAges?.[
                                 childIndex
@@ -399,6 +387,22 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
       </S.ApartmentsFormWrapper>
 
       <S.SearchAccommodationFormFooter>
+        <Form.Item
+          label="Selecione uma opção de filtro"
+          // validateStatus={}
+          // help=''
+        >
+          <Select
+            placeholder="Selecione uma opção"
+            defaultValue={filterModeSchemeData[0].modeId}
+            value={filterMode}
+            onChange={(modeId) => {
+              handleChangeFilterMode(modeId)
+            }}
+            options={formattedFilterModeScheme}
+            disabled={!isFormValid || filterResults?.isLoading || false}
+          />
+        </Form.Item>
         <Button
           disabled={!isFormValid || filterResults?.isLoading}
           onClick={handleResetForm}

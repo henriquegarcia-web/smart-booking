@@ -54,6 +54,49 @@ const discountRate = 7
 
 const filterCountsLimit = 8
 
+export interface IFilterMode {
+  modeId: string
+  modeLabel: string
+}
+
+const filterModeSchemeData: IFilterMode[] = [
+  {
+    modeId: '/filter/accommodations',
+    modeLabel: 'Todos os portais'
+  },
+  {
+    modeId: '/filter/accommodations/travel-xs',
+    modeLabel: 'Apenas TravelXS'
+  },
+  {
+    modeId: 'only_connect_travel/connect-travel',
+    modeLabel: 'Apenas Connect Travel'
+  }
+]
+
+export interface IFileType {
+  typeId: string
+  typeLabel: string
+}
+
+const fileTypesSchemeData: IFileType[] = [
+  {
+    typeId: 'type_txt',
+    typeLabel: 'Exportar para TXT'
+  },
+  {
+    typeId: 'type_pdf',
+    typeLabel: 'Exportar para PDF'
+  }
+]
+
 // ==================================== EXPORTS
 
-export { rolesData, pensionSchemeData, discountRate, filterCountsLimit }
+export {
+  rolesData,
+  pensionSchemeData,
+  filterModeSchemeData,
+  fileTypesSchemeData,
+  discountRate,
+  filterCountsLimit
+}

@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import {
   IFilterResults,
   IFilterResultsData,
@@ -25,12 +26,10 @@ import {
   theme
 } from 'antd'
 import type { CollapseProps, TableProps } from 'antd'
-import { useMemo, useState } from 'react'
-import { discountRate } from '@/data/admin'
+import { discountRate, fileTypesSchemeData } from '@/data/admin'
 import { FiDownload } from 'react-icons/fi'
 import { saveAs } from 'file-saver'
 import { toast } from 'react-toastify'
-import { socket } from '@/components/OTPForm'
 
 const items: CollapseProps['items'] = [
   {
@@ -83,16 +82,6 @@ const columns: TableProps<IFilterData>['columns'] = [
     dataIndex: 'accommodationMeal',
     key: 'accommodationMeal'
   }
-  // {
-  //   title: 'Action',
-  //   key: 'action',
-  //   render: (_, record) => (
-  //     <Space size="middle">
-  //       <a>Invite {record.name}</a>
-  //       <a>Delete</a>
-  //     </Space>
-  //   )
-  // }
 ]
 
 interface IAccommodationSearchView {}
@@ -102,6 +91,9 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
   const { filterResults } = useFilter()
 
   const [selectedDiscount, setSelectedDiscount] = useState<number>(0)
+  const [selectedFileType, setSelectedFileType] = useState<string>(
+    fileTypesSchemeData[0].typeId
+  )
   const [isDownloadLoading, setIsDownloadLoading] = useState<boolean>(false)
 
   const formattedUsersList: IFilterData[] = useMemo(() => {
@@ -120,17 +112,15 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
     }))
   }, [selectedDiscount, filterResults])
 
-  const formattedDiscountRates = Array.from(
-    { length: discountRate },
-    (_, index) => ({
-      value: index + 1,
-      label: `${index + 1}% de desconto`
-    })
-  )
-
   const handleChangeDiscount = (value: number | null) => {
     setSelectedDiscount(value ?? 0)
   }
+
+  const handleChangeFileType = (type: string) => {
+    setSelectedFileType(type)
+  }
+
+  const generateAndDownloadPdf = (data: IFilterResultsData) => {}
 
   const generateAndDownloadTxt = (data: IFilterResultsData) => {
     try {
@@ -163,10 +153,28 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
     }
   }
 
-  // const triggerOTPManually = () => {
-  //   console.log('Simulando evento requestOTP')
-  //   socket.emit('requestOTP')
-  // }
+  const handleDownloadData = (data: IFilterResultsData) => {
+    if (selectedFileType === 'type_txt') {
+      generateAndDownloadTxt(data)
+      return
+    }
+    if (selectedFileType === 'type_pdf') {
+      generateAndDownloadPdf(data)
+    }
+  }
+
+  const formattedDiscountRates = Array.from(
+    { length: discountRate },
+    (_, index) => ({
+      value: index + 1,
+      label: `${index + 1}%`
+    })
+  )
+
+  const formattedFileTypesScheme = fileTypesSchemeData.map((fileType) => ({
+    value: fileType.typeId,
+    label: fileType.typeLabel
+  }))
 
   return (
     <S.AccommodationSearchView>
@@ -175,11 +183,18 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
         legend="Filtro e obtenha uma lista de hospedagens"
       >
         <Select
-          placeholder="Selecione um desconto"
+          placeholder="Desconto (%)"
           options={formattedDiscountRates}
           allowClear
-          disabled={filterResults?.isLoading || isDownloadLoading || false}
+          disabled={filterResults?.isLoading || isDownloadLoading}
           onChange={handleChangeDiscount}
+        />
+        <Select
+          placeholder="Formato do arquivo"
+          options={formattedFileTypesScheme}
+          defaultValue={fileTypesSchemeData[0].typeId}
+          disabled={filterResults?.isLoading || isDownloadLoading}
+          onChange={handleChangeFileType}
         />
         <Button
           type="dashed"
@@ -190,7 +205,7 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
           }
           icon={<FiDownload />}
           iconPosition="start"
-          onClick={() => generateAndDownloadTxt(filterResults?.data)}
+          onClick={() => handleDownloadData(filterResults?.data)}
         >
           Exportar Dados
         </Button>
@@ -216,3 +231,8 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
 }
 
 export default AccommodationSearchView
+
+// const triggerOTPManually = () => {
+//   console.log('Simulando evento requestOTP')
+//   socket.emit('requestOTP')
+// }

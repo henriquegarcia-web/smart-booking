@@ -120,6 +120,17 @@ export const FormInputWrapper = styled.div`
 export const SearchAccommodationFormFooter = styled.div`
   display: flex;
   justify-content: flex-end;
+  align-items: flex-end;
   column-gap: 10px;
   width: 100%;
+
+  .ant-form-item {
+    width: 35%;
+    min-width: 190px;
+    max-width: 220px;
+
+    .ant-form-item-label {
+      margin-bottom: -4px !important;
+    }
+  }
 `

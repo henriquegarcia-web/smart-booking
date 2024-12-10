@@ -9,6 +9,7 @@ import {
 import { toast } from 'react-toastify'
 import { useQueryClient } from '@tanstack/react-query'
 import { useFilterAccommodations } from '@/hooks/data/useFilter'
+import { filterModeSchemeData } from '@/data/admin'
 
 type MealType = 'only_breakfast' | 'half_meal' | 'full_meal'
 
@@ -47,8 +48,10 @@ export interface IFilterResults {
 
 interface IFilterContextData {
   filterData: IFilterData
+  filterMode: string
   filterResults: IFilterResults
   handleFilter: (newFilterData: IFilterData) => Promise<boolean>
+  handleChangeFilterMode: (type: string) => void
 }
 
 export const FilterContext = createContext<IFilterContextData>(
@@ -57,9 +60,11 @@ export const FilterContext = createContext<IFilterContextData>(
 
 const FilterProvider = ({ children }: { children: React.ReactNode }) => {
   const queryClient = useQueryClient()
-  const [filterData, setFilterData] = useState<IFilterData>({} as IFilterData)
 
-  const filterResults = useFilterAccommodations(filterData)
+  const [filterData, setFilterData] = useState<IFilterData>({} as IFilterData)
+  const [filterMode, setFilterMode] = useState(filterModeSchemeData[0].modeId)
+
+  const filterResults = useFilterAccommodations(filterData, filterMode)
 
   const handleFilter = async (newFilterData: IFilterData) => {
     try {
@@ -77,6 +82,10 @@ const FilterProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
+  const handleChangeFilterMode = (modeId: string) => {
+    setFilterMode(modeId)
+  }
+
   // useEffect(() => {
   //   // console.log('FILTER DATA ===>', filterData)
   //   // console.log('FILTER RESULTS DATA ===>', filterResults.data)
@@ -86,13 +95,15 @@ const FilterProvider = ({ children }: { children: React.ReactNode }) => {
   const FilterContextData: IFilterContextData = useMemo(
     () => ({
       filterData,
+      filterMode,
       filterResults: {
         data: filterResults?.data,
         isLoading: filterResults?.isLoading ?? false,
         error: filterResults?.error ?? null,
         withoutSearch: !filterData.checkInDate
       },
-      handleFilter
+      handleFilter,
+      handleChangeFilterMode
     }),
     [filterData, filterResults]
   )
