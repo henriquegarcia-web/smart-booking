@@ -2,14 +2,11 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchAccommodations } from '@/services/filter'
 import { IFilterData, IFilterResultsData } from '@/contexts/FilterProvider'
 
-const useFilterAccommodations = (
-  filterData: IFilterData | null,
-  filterMode: string
-) => {
+const useFilterAccommodations = (filterData: IFilterData | null) => {
   return useQuery<IFilterResultsData>({
     // queryKey: ['filterAccommodations', filterData],
-    queryKey: ['filterAccommodations', JSON.stringify(filterData), filterMode],
-    queryFn: () => fetchAccommodations(filterData, filterMode),
+    queryKey: ['filterAccommodations', JSON.stringify(filterData)],
+    queryFn: () => fetchAccommodations(filterData),
     enabled: !!filterData
   })
 }

@@ -77,7 +77,8 @@ const SearchAccommodationsSchema = Yup.object().shape({
   apartments: Yup.array()
     .of(ApartmentSchema)
     .min(1, 'Selecione pelo menos um apartamento')
-    .defined()
+    .defined(),
+  filterMode: Yup.string().required().defined()
 })
 
 type IApartment = Yup.InferType<typeof ApartmentSchema>
@@ -95,15 +96,15 @@ const SearchFormDefaultValues: ISearchForm = {
       childrenAges: []
       // seniorAges: []
     }
-  ]
+  ],
+  filterMode: filterModeSchemeData[0].modeId
 }
 
 interface ISearchAccommodationForm {}
 
 const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
   const { token } = theme.useToken()
-  const { handleFilter, filterResults, filterMode, handleChangeFilterMode } =
-    useFilter()
+  const { handleFilter, filterResults } = useFilter()
 
   const {
     control,
@@ -170,10 +171,6 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
       })
     )
     return formattedCountFullOptions
-  }
-
-  const onClickStopProg = (e) => {
-    e.stopPropagation()
   }
 
   // useEffect(() => {
@@ -393,35 +390,42 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
 
       <S.SearchAccommodationFormFooter>
         <S.FormFooterErrors>
-          {filterResults.data?.filterErrors !== 'without_error' && (
-            <>
-              Ocorreu um erro, por favor busque novamente!
-              <Tag color="orangered">
-                {filterResults.data?.filterErrors === 'all_portals' &&
-                  'Todos os portais'}
-                {filterResults.data?.filterErrors === 'travel_xs' &&
-                  'Connect Travel'}
-                {filterResults.data?.filterErrors === 'connect_travel' &&
-                  'Travel XS'}
-              </Tag>
-            </>
-          )}
+          {!!filterResults?.data?.filterErrors &&
+            filterResults?.data?.filterErrors !== 'without_error' && (
+              <>
+                Ocorreu um erro, por favor busque novamente!
+                <Tag color="orangered">
+                  {filterResults.data?.filterErrors === 'all_portals' &&
+                    'Todos os portais'}
+                  {filterResults.data?.filterErrors === 'travel_xs' &&
+                    'Connect Travel'}
+                  {filterResults.data?.filterErrors === 'connect_travel' &&
+                    'Travel XS'}
+                </Tag>
+              </>
+            )}
         </S.FormFooterErrors>
 
         <S.FormFooterInputs>
-          <Form.Item label="Selecione uma opção de filtro">
-            <Select
-              placeholder="Selecione uma opção"
-              onClick={onClickStopProg}
-              defaultValue={filterModeSchemeData[0].modeId}
-              value={filterMode}
-              onChange={(modeId) => {
-                handleChangeFilterMode(modeId)
-              }}
-              options={formattedFilterModeScheme}
-              disabled={!isFormValid || filterResults?.isLoading || false}
-            />
-          </Form.Item>
+          <Controller
+            name="filterMode"
+            control={control}
+            defaultValue={filterModeSchemeData[0].modeId}
+            render={({ field }) => (
+              <Form.Item label="Selecione uma opção de filtro">
+                <Select
+                  {...field}
+                  placeholder="Selecione uma opção"
+                  onChange={(value) => {
+                    field.onChange(value)
+                  }}
+                  options={formattedFilterModeScheme}
+                  disabled={!isFormValid || filterResults?.isLoading || false}
+                />
+              </Form.Item>
+            )}
+          />
+
           <Button
             disabled={!isFormValid || filterResults?.isLoading}
             onClick={handleResetForm}

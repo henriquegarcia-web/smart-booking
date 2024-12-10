@@ -21,8 +21,9 @@ export interface IFilterData {
   childsAges: number[]
   mealType?: string
   unavailable?: boolean
-  discount?: number
   accommodationsCount?: number
+  discount?: number
+  filterMode?: string
 }
 
 export interface IAccommodation {
@@ -49,10 +50,10 @@ export interface IFilterResults {
 
 interface IFilterContextData {
   filterData: IFilterData
-  filterMode: string
+  // filterMode: string
   filterResults: IFilterResults
   handleFilter: (newFilterData: IFilterData) => Promise<boolean>
-  handleChangeFilterMode: (type: string) => void
+  // handleChangeFilterMode: (type: string) => void
 }
 
 export const FilterContext = createContext<IFilterContextData>(
@@ -63,9 +64,9 @@ const FilterProvider = ({ children }: { children: React.ReactNode }) => {
   const queryClient = useQueryClient()
 
   const [filterData, setFilterData] = useState<IFilterData>({} as IFilterData)
-  const [filterMode, setFilterMode] = useState(filterModeSchemeData[0].modeId)
+  // const [filterMode, setFilterMode] = useState(filterModeSchemeData[0].modeId)
 
-  const filterResults = useFilterAccommodations(filterData, filterMode)
+  const filterResults = useFilterAccommodations(filterData)
 
   const handleFilter = async (newFilterData: IFilterData) => {
     try {
@@ -83,9 +84,9 @@ const FilterProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
-  const handleChangeFilterMode = (modeId: string) => {
-    setFilterMode(modeId)
-  }
+  // const handleChangeFilterMode = (modeId: string) => {
+  //   setFilterMode(modeId)
+  // }
 
   // useEffect(() => {
   //   // console.log('FILTER DATA ===>', filterData)
@@ -96,15 +97,15 @@ const FilterProvider = ({ children }: { children: React.ReactNode }) => {
   const FilterContextData: IFilterContextData = useMemo(
     () => ({
       filterData,
-      filterMode,
+      // filterMode,
       filterResults: {
         data: filterResults?.data,
         isLoading: filterResults?.isLoading ?? false,
         error: filterResults?.error ?? null,
         withoutSearch: !filterData.checkInDate
       },
-      handleFilter,
-      handleChangeFilterMode
+      handleFilter
+      // handleChangeFilterMode
     }),
     [filterData, filterResults]
   )

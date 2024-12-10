@@ -1,10 +1,7 @@
 import api from '@/lib/fetch'
 import { IFilterData } from '@/contexts/FilterProvider'
 
-const fetchAccommodations = async (
-  filterData: IFilterData,
-  filterMode: string
-) => {
+const fetchAccommodations = async (filterData: IFilterData) => {
   try {
     const {
       checkInDate,
@@ -19,7 +16,7 @@ const fetchAccommodations = async (
 
     console.log(filterData)
 
-    const response = await api.get(filterMode, {
+    const response = await api.get(filterData.filterMode, {
       params: {
         checkInDate,
         checkOutDate,
