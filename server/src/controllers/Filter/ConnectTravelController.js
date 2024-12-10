@@ -17,7 +17,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const waitForSelector = async (page, selector, timeout = 30000) => {
   console.log(`Aguardando elemento: ${selector}`)
-  await page.waitForSelector(selector, { visible: true, timeout })
+  await page.waitForSelector(selector, { visible: true, hidden: true, timeout })
   console.log(`Elemento "${selector}" encontrado.`)
 }
 
@@ -201,13 +201,20 @@ const fillBookingForm = async (
   await frame.click(bedroomsModalCloseSelector)
 
   await delay(LONGER_DELAY)
+
+  const foiOuNao = await waitForSelector(frame, '#pnlTituloResultado', 10000)
+
+  if (!foiOuNao) {
+    await frame.click('.pnlBotaoPesquisa button')
+    await delay(LONGER_DELAY)
+  }
 }
 
 const scrapeAccommodations = async (page, frame, mealType) => {
   console.log('Iniciando scraping de acomodações...')
   // await delay(2000)
 
-  await page.screenshot({ path: 'after-click-01.png' })
+  await page.screenshot({ path: 'after-click-02.png' })
 
   await waitForSelector(frame, '#pnlTituloResultado', 30000)
 

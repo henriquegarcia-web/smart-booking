@@ -11,3 +11,13 @@ router.get('/accommodations/connect-travel', findAccommodationsOnConnectTravel)
 router.get('/accommodations', findAccommodations)
 
 export default router
+
+/**
+ 
+
+  - Implementar funções assincronas de execução, mas retorna
+    quando todas estiverem prontas
+  - Colocar uma awaitforselector de forma otimizada no código e
+    ver se resolve
+
+ */

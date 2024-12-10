@@ -82,7 +82,7 @@ export const findAccommodations = async (req, res) => {
       unavailable
     )
 
-    const response = [...connectTravelResults.filterResults, ...travelXsResults]
+    const response = [...connectTravelResults, ...travelXsResults.filterResults]
 
     console.log(
       'Resposta final preparada, número de resultados: ',
