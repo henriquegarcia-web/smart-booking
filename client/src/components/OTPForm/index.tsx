@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import * as S from './styles'
 
-import { Button, Form, Input, Modal, theme } from 'antd'
+import { Button, Form, Input, Modal, Space, theme } from 'antd'
 import * as Yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm, Controller } from 'react-hook-form'
@@ -27,10 +27,13 @@ interface IOTPForm {}
 
 const OTPForm = ({}: IOTPForm) => {
   const [showOTPForm, setShowOTPForm] = useState(false)
-  // const [otp, setOtp] = useState('')
 
   const handleOpenOTPForm = () => setShowOTPForm(true)
-  const handleCloseOTPForm = () => setShowOTPForm(false)
+  const handleCloseOTPForm = () => {
+    // Não fechamos o modal diretamente aqui
+    // Apenas resetamos o formulário
+    handleResetForm()
+  }
 
   const { control, handleSubmit, formState, reset } = useForm<IValidateOTPForm>(
     {
@@ -43,7 +46,6 @@ const OTPForm = ({}: IOTPForm) => {
 
   const handleResetForm = () => {
     reset()
-    handleCloseOTPForm()
   }
 
   useEffect(() => {
@@ -58,7 +60,13 @@ const OTPForm = ({}: IOTPForm) => {
 
   const onSubmit = async (data: IValidateOTPFormData) => {
     socket.emit('submitOTP', data.otp)
-    handleCloseOTPForm()
+    setShowOTPForm(false)
+    handleResetForm()
+  }
+
+  const handleCancel = () => {
+    // Adicionamos uma função específica para cancelar
+    setShowOTPForm(false)
     handleResetForm()
   }
 
@@ -66,8 +74,10 @@ const OTPForm = ({}: IOTPForm) => {
     <Modal
       title="Validação de código"
       open={showOTPForm}
+      onCancel={null} // Removemos o onCancel para evitar o fechamento ao clicar fora ou no X
+      closable={false} // Removemos o botão de fechar (X) do modal
+      maskClosable={false} // Evita que o modal feche ao clicar fora dele
       footer={null}
-      onCancel={handleCloseOTPForm}
       style={{ maxWidth: 340 }}
     >
       <S.OTPForm onFinish={handleSubmit(onSubmit)}>
@@ -90,9 +100,17 @@ const OTPForm = ({}: IOTPForm) => {
             </Form.Item>
           )}
         />
-        <Button htmlType="submit" disabled={!isValid} loading={isSubmitting}>
-          Validar
-        </Button>
+        <Space>
+          <Button onClick={handleCancel}>Cancelar</Button>
+          <Button
+            htmlType="submit"
+            type="primary"
+            disabled={!isValid}
+            loading={isSubmitting}
+          >
+            Validar
+          </Button>
+        </Space>
       </S.OTPForm>
     </Modal>
   )

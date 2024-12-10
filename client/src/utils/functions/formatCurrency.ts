@@ -55,19 +55,6 @@ const applyDiscount = (value, discount, withPercent = true) => {
   const first = value.replace('R$ ', '').replace('.', '').replace(',', '.')
 
   const incomingValue = parseFloat(first.slice(0, -2) + '.' + first.slice(-2))
-  console.log(incomingValue)
-
-  // if (typeof value === 'string') {
-  //   incomingValue = parseFloat(
-  //     value.replace('R$ ', '').replace('.', '').replace(',', '.')
-  //   )
-  //   // incomingValue = parseFloat(value.replace(/[^\d,]/g, '').replace(',', '.'))
-  // } else if (typeof value === 'number') {
-  //   const formattedToString = value.toString()
-  //   incomingValue =
-  // } else {
-  //   throw new Error('O valor deve ser uma string ou um número')
-  // }
 
   const desconto = incomingValue * (discount / 100)
   const valorComDesconto = incomingValue - desconto
