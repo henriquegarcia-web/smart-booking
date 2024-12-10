@@ -413,17 +413,17 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
   const unavailable = 'true'
 
   try {
-    const response = await formatTravelXsData(
+    const travelXsResults = await formatTravelXsData(
       checkInDate,
       checkOutDate,
       days,
-      // adultCount,
-      parseInt(adultCount),
-      childsAges ? childsAges.split(',').length : 0,
+      adultCount,
+      childsAges,
       mealType,
       unavailable
     )
-    res.json(response)
+
+    res.json(travelXsResults)
   } catch (error) {
     console.error('Erro ao processar a busca de acomodações:', error.message)
     res.status(500).json({

@@ -15,10 +15,34 @@ const LONGER_DELAY = 2500
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
+// const waitForSelector = async (page, selector, timeout = 30000) => {
+//   console.log(`Aguardando elemento: ${selector}`)
+//   return await page.waitForSelector(selector, {
+//     visible: true,
+//     hidden: true,
+//     timeout
+//   })
+// }
+
 const waitForSelector = async (page, selector, timeout = 30000) => {
-  console.log(`Aguardando elemento: ${selector}`)
-  await page.waitForSelector(selector, { visible: true, hidden: true, timeout })
-  console.log(`Elemento "${selector}" encontrado.`)
+  try {
+    console.log(`Aguardando elemento: ${selector}`)
+    await page.waitForSelector(selector, {
+      visible: true,
+      hidden: true,
+      timeout
+    })
+    console.log(`Elemento "${selector}" encontrado.`)
+    return true // Retorna true se o elemento for encontrado
+  } catch (error) {
+    if (error.name === 'TimeoutError') {
+      console.warn(
+        `Timeout: Elemento "${selector}" não encontrado após ${timeout}ms.`
+      )
+      return false // Retorna false se não encontrar o elemento no tempo limite
+    }
+    throw error // Re-lança outros erros que não sejam de timeout
+  }
 }
 
 // const getUserInput = (query) => {
@@ -164,9 +188,10 @@ const fillBookingForm = async (
 
   const bedroomsAddAdultInputSelector = '#frmMotorHotel .fakeInput > a'
 
-  const destinationInputSelector = '#frmMotorHotel\\:idDestinoHotel_input'
-  const checkinInputSelector = '#frmMotorHotel\\:dtPartida_input'
-  const checkoutInputSelector = '#frmMotorHotel\\:dtRetorno_input'
+  const destinationInputSelector =
+    '#frmMotorHotel .motor-pesquisa-container > div > div:nth-of-type(2) > div > span > input:first-of-type'
+  const checkinInputSelector = '#frmMotorHotel input[placeholder="Check-in"]'
+  const checkoutInputSelector = '#frmMotorHotel input[placeholder="Check-out"]'
 
   await frame.type(destinationInputSelector, destination)
   await waitForSelector(frame, destinationModalSelector, 30000)
@@ -174,11 +199,17 @@ const fillBookingForm = async (
   await delay(DEFAULT_DELAY)
 
   console.log('[CONCLUÍDO] - Preenchimento de: Destino')
-  // await page.screenshot({ path: 'after-click-01.png' })
 
-  await frame.type(checkinInputSelector, checkInDate)
+  console.log(
+    '[XXXXXXXXXXX] -',
+    checkInDate.toString(),
+    checkOutDate.toString()
+  )
+
+  await frame.type(checkinInputSelector, checkInDate.toString())
   await frame.click(destinationModalClose)
-  await frame.type(checkoutInputSelector, checkOutDate)
+  await frame.click(checkoutInputSelector)
+  await frame.type(checkoutInputSelector, checkOutDate.toString())
   await frame.click(destinationModalClose)
   await delay(DEFAULT_DELAY)
 
@@ -196,7 +227,7 @@ const fillBookingForm = async (
   }
 
   console.log('[CONCLUÍDO] - Preenchimento de: Apartamentos')
-  await page.screenshot({ path: 'after-click-01.png' })
+  // await page.screenshot({ path: 'after-click-01.png' })
 
   await frame.click(bedroomsModalCloseSelector)
 
@@ -204,9 +235,13 @@ const fillBookingForm = async (
 
   const foiOuNao = await waitForSelector(frame, '#pnlTituloResultado', 10000)
 
+  await page.screenshot({ path: 'after-click-01.png' })
+
   if (!foiOuNao) {
-    await frame.click('.pnlBotaoPesquisa button')
+    await frame.click('#pnlVenda .pnlBotaoPesquisa button')
     await delay(LONGER_DELAY)
+
+    await page.screenshot({ path: 'after-click-02.png' })
   }
 }
 
@@ -214,9 +249,9 @@ const scrapeAccommodations = async (page, frame, mealType) => {
   console.log('Iniciando scraping de acomodações...')
   // await delay(2000)
 
-  await page.screenshot({ path: 'after-click-02.png' })
+  await page.screenshot({ path: 'after-click-03.png' })
 
-  await waitForSelector(frame, '#pnlTituloResultado', 30000)
+  await waitForSelector(frame, '#pnlTituloResultado', 60000)
 
   const getAllAccommodations = async () => {
     return await frame.evaluate((mealType) => {
@@ -402,15 +437,15 @@ export const findAccommodationsOnConnectTravel = async (req, res) => {
   try {
     const checkInDate = '12/12/2024'
     const checkOutDate = '14/12/2024'
-    const accommodationsCount = 0
+    const accommodationsCount = 1
     const adultCount = '2'
     const childsAges = ''
     const mealType = 'only_breakfast'
 
     const response = await executeScraping(
       checkInDate,
-      accommodationsCount,
       checkOutDate,
+      accommodationsCount,
       parseInt(adultCount),
       childsAges ? childsAges.split(',').length : 0,
       mealType

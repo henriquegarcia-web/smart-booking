@@ -69,7 +69,7 @@ const filterModeSchemeData: IFilterMode[] = [
     modeLabel: 'Apenas TravelXS'
   },
   {
-    modeId: 'only_connect_travel/connect-travel',
+    modeId: '/filter/accommodations/connect-travel',
     modeLabel: 'Apenas Connect Travel'
   }
 ]

@@ -84,8 +84,8 @@ export const findAccommodations = async (req, res) => {
 
     // ================================================== MERGEAR REMOVENDO IGUAIS
     const filterResults = [
-      ...connectTravelResults.filterResults,
-      ...travelXsResults.filterResults
+      ...travelXsResults.filterResults,
+      ...connectTravelResults.filterResults
     ]
 
     const response = {

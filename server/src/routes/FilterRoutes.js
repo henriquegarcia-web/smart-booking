@@ -25,4 +25,10 @@ export default router
 
     pedir para IA otimizar código
 
+    remover imagens
+
+    criar validação para quando uma das respoonse vem zerada
+
+    modal de validação do código nao pdoe ser fechavel
+
  */
