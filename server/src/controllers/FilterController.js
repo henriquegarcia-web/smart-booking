@@ -63,36 +63,48 @@ export const findAccommodations = async (req, res) => {
   const accommodationsCount = 1
 
   try {
-    const connectTravelResults = await executeScraping(
-      checkInDate,
-      checkOutDate,
-      accommodationsCount,
-      parseInt(adultCount),
-      childsAges ? childsAges.split(',').length : 0,
-      mealType
-    )
+    let connectTravelResults, travelXsResults
+    let filterErrors = 'without_error'
+    let filterResults = []
 
-    const travelXsResults = await formatTravelXsData(
-      checkInDate,
-      checkOutDate,
-      days,
-      adultCount,
-      childsAges,
-      mealType,
-      unavailable
-    )
+    try {
+      connectTravelResults = await executeScraping(
+        checkInDate,
+        checkOutDate,
+        accommodationsCount,
+        parseInt(adultCount),
+        childsAges ? childsAges.split(',').length : 0,
+        mealType
+      )
+      filterResults = [...filterResults, ...connectTravelResults.filterResults]
+    } catch (error) {
+      console.error('Erro ao obter resultados do ConnectTravel:', error.message)
+      filterErrors = 'connect_travel'
+    }
 
-    // ================================================== MERGEAR REMOVENDO IGUAIS
-    const filterResults = [
-      ...travelXsResults.filterResults,
-      ...connectTravelResults.filterResults
-    ]
+    try {
+      travelXsResults = await formatTravelXsData(
+        checkInDate,
+        checkOutDate,
+        days,
+        adultCount,
+        childsAges,
+        mealType,
+        unavailable
+      )
+      filterResults = [...filterResults, ...travelXsResults.filterResults]
+    } catch (error) {
+      console.error('Erro ao obter resultados do TravelXs:', error.message)
+      filterErrors =
+        filterErrors === 'connect_travel' ? 'all_portals' : 'travel_xs'
+    }
 
     const response = {
       filterDateRange: `${checkInDate} a ${checkOutDate}`,
       filterAdults: parseInt(adultCount),
       filterChilds: childsAges ? childsAges.split(',').length : 0,
-      filterResults: filterResults
+      filterResults: filterResults,
+      filterErrors: filterErrors
     }
 
     console.log(
@@ -107,4 +119,51 @@ export const findAccommodations = async (req, res) => {
       details: error.message
     })
   }
+
+  // try {
+  //   const connectTravelResults = await executeScraping(
+  //     checkInDate,
+  //     checkOutDate,
+  //     accommodationsCount,
+  //     parseInt(adultCount),
+  //     childsAges ? childsAges.split(',').length : 0,
+  //     mealType
+  //   )
+
+  //   const travelXsResults = await formatTravelXsData(
+  //     checkInDate,
+  //     checkOutDate,
+  //     days,
+  //     adultCount,
+  //     childsAges,
+  //     mealType,
+  //     unavailable
+  //   )
+
+  //   // ================================================== MERGEAR REMOVENDO IGUAIS
+  //   const filterResults = [
+  //     ...travelXsResults.filterResults,
+  //     ...connectTravelResults.filterResults
+  //   ]
+
+  //   const response = {
+  //     filterDateRange: `${checkInDate} a ${checkOutDate}`,
+  //     filterAdults: parseInt(adultCount),
+  //     filterChilds: childsAges ? childsAges.split(',').length : 0,
+  //     filterResults: filterResults,
+  //     filterErrors: // null | 'travel_xs' | 'connect_travel' | 'all_portals'
+  //   }
+
+  //   console.log(
+  //     'Resposta final preparada, número de resultados: ',
+  //     response.filterResults.length
+  //   )
+  //   res.json(response)
+  // } catch (error) {
+  //   console.error('Erro ao processar a busca de acomodações:', error.message)
+  //   res.status(500).json({
+  //     error: 'Erro ao obter disponibilidade de hotéis',
+  //     details: error.message
+  //   })
+  // }
 }
