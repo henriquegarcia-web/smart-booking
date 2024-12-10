@@ -196,7 +196,7 @@ const fillBookingForm = async (
   }
 
   console.log('[CONCLUÍDO] - Preenchimento de: Apartamentos')
-  // await page.screenshot({ path: 'after-click-04.png' })
+  await page.screenshot({ path: 'after-click-01.png' })
 
   await frame.click(bedroomsModalCloseSelector)
 
@@ -205,6 +205,10 @@ const fillBookingForm = async (
 
 const scrapeAccommodations = async (page, frame, mealType) => {
   console.log('Iniciando scraping de acomodações...')
+  // await delay(2000)
+
+  await page.screenshot({ path: 'after-click-01.png' })
+
   await waitForSelector(frame, '#pnlTituloResultado', 30000)
 
   const getAllAccommodations = async () => {
@@ -368,32 +372,41 @@ export const executeScraping = async (
 // ========================================== CONNECT TRAVEL
 
 export const findAccommodationsOnConnectTravel = async (req, res) => {
-  const {
-    checkInDate,
-    checkOutDate,
-    accommodationsCount,
-    days,
-    adultCount,
-    childsAges,
-    mealType
-  } = req.query
+  // const {
+  //   checkInDate,
+  //   checkOutDate,
+  //   accommodationsCount,
+  //   adultCount,
+  //   childsAges,
+  //   mealType
+  // } = req.query
+
+  // if (
+  //   !checkInDate ||
+  //   !checkOutDate ||
+  //   !accommodationsCount ||
+  //   !adultCount ||
+  //   !childsAges ||
+  //   !mealType
+  // ) {
+  //   return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
+  // }
 
   try {
-    // const response = await executeScraping(
-    //   checkInDate,
-    //   accommodationsCount,
-    //   checkOutDate,
-    //   parseInt(adultCount),
-    //   childsAges ? childsAges.split(',').length : 0,
-    //   mealType
-    // )
+    const checkInDate = '12/12/2024'
+    const checkOutDate = '14/12/2024'
+    const accommodationsCount = 0
+    const adultCount = '2'
+    const childsAges = ''
+    const mealType = 'only_breakfast'
+
     const response = await executeScraping(
-      '11/12/2024',
-      '12/12/2024',
-      2,
-      2,
-      0,
-      'only_breakfast'
+      checkInDate,
+      accommodationsCount,
+      checkOutDate,
+      parseInt(adultCount),
+      childsAges ? childsAges.split(',').length : 0,
+      mealType
     )
     res.json(response)
   } catch (error) {

@@ -2,34 +2,31 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
-import {
-  authenticateTravelXs,
-  fetchAccommodationsData
-} from './Filter/TravelXsController.js'
+import { formatTravelXsData } from './Filter/TravelXsController.js'
 import { executeScraping } from './Filter/ConnectTravelController.js'
 
 // Nova função para formatar os dados de resposta
-const formatResponseData = (
-  travelXsData,
-  connectTravelData,
-  checkInDate,
-  checkOutDate,
-  adultCount,
-  childsAges
-) => {
-  const filterDateRange = `${checkInDate} a ${checkOutDate}`
-  const filterAdults = parseInt(adultCount)
-  const filterChilds = childsAges ? childsAges.split(',').length : 0
+// const formatResponseData = (
+//   travelXsData,
+//   connectTravelData,
+//   checkInDate,
+//   checkOutDate,
+//   adultCount,
+//   childsAges
+// ) => {
+//   const filterDateRange = `${checkInDate} a ${checkOutDate}`
+//   const filterAdults = parseInt(adultCount)
+//   const filterChilds = childsAges ? childsAges.split(',').length : 0
 
-  const filterResults = [...travelXsData, ...connectTravelData.filterResults]
+//   const filterResults = [...travelXsData, ...connectTravelData.filterResults]
 
-  return {
-    filterDateRange,
-    filterAdults,
-    filterChilds,
-    filterResults
-  }
-}
+//   return {
+//     filterDateRange,
+//     filterAdults,
+//     filterChilds,
+//     filterResults
+//   }
+// }
 
 // Nova função unificada para buscar acomodações
 export const findAccommodations = async (req, res) => {
@@ -44,6 +41,18 @@ export const findAccommodations = async (req, res) => {
   //   accommodationsCount
   // } = req.query
 
+  // if (
+  //   !checkInDate ||
+  //   !checkOutDate ||
+  //   !days ||
+  //   !accommodationsCount ||
+  //   !adultCount ||
+  //   !childsAges ||
+  //   !mealType
+  // ) {
+  //   return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
+  // }
+
   const checkInDate = '12/12/2024'
   const checkOutDate = '14/12/2024'
   const days = '2'
@@ -53,47 +62,7 @@ export const findAccommodations = async (req, res) => {
   const unavailable = 'true'
   const accommodationsCount = 1
 
-  if (!checkInDate || !checkOutDate || !days || !adultCount) {
-    return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
-  }
-
   try {
-    // Busca de dados do TravelXs
-    const tokenFirstUser = await authenticateTravelXs(
-      process.env.TRAVELXS_FIRST_USER,
-      process.env.TRAVELXS_PASSWORD
-    )
-    const resultsFirstUser = await fetchAccommodationsData(
-      tokenFirstUser,
-      checkInDate,
-      checkOutDate,
-      days,
-      adultCount,
-      childsAges,
-      mealType,
-      unavailable,
-      'hot_beach'
-    )
-
-    const tokenSecondUser = await authenticateTravelXs(
-      process.env.TRAVELXS_SECOND_USER,
-      process.env.TRAVELXS_PASSWORD
-    )
-    const resultsSecondUser = await fetchAccommodationsData(
-      tokenSecondUser,
-      checkInDate,
-      checkOutDate,
-      days,
-      adultCount,
-      childsAges,
-      mealType,
-      unavailable,
-      'enjoy'
-    )
-
-    const travelXsResults = [...resultsFirstUser, ...resultsSecondUser]
-
-    // Busca de dados do ConnectTravel
     const connectTravelResults = await executeScraping(
       checkInDate,
       checkOutDate,
@@ -103,19 +72,21 @@ export const findAccommodations = async (req, res) => {
       mealType
     )
 
-    // Formatação dos dados de resposta
-    const response = formatResponseData(
-      travelXsResults,
-      connectTravelResults,
+    const travelXsResults = formatTravelXsData(
       checkInDate,
       checkOutDate,
+      days,
       adultCount,
-      childsAges
+      childsAges,
+      mealType,
+      unavailable
     )
+
+    const response = [...connectTravelResults.filterResults, ...travelXsResults]
 
     console.log(
       'Resposta final preparada, número de resultados: ',
-      response.filterResults.length
+      response.length
     )
     res.json(response)
   } catch (error) {

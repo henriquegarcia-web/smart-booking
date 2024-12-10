@@ -326,31 +326,15 @@ export const fetchAccommodationsData = async (
   return filterResults
 }
 
-export const findAccommodationsOnTravelXs = async (req, res) => {
-  // const {
-  //   checkInDate,
-  //   checkOutDate,
-  //   days,
-  //   adultCount,
-  //   childsAges,
-  //   mealType,
-  //   unavailable
-  // } = req.query
-
-  // console.log(req.query)
-
-  const checkInDate = '12/12/2024'
-  const checkOutDate = '14/12/2024'
-  const days = '2'
-  const adultCount = '2'
-  const childsAges = ''
-  const mealType = 'only_breakfast'
-  const unavailable = 'true'
-
-  if (!checkInDate || !checkOutDate || !days || !adultCount) {
-    return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
-  }
-
+export const formatTravelXsData = async (
+  checkInDate,
+  checkOutDate,
+  days,
+  adultCount,
+  childsAges,
+  mealType,
+  unavailable
+) => {
   try {
     // Primeiro login e busca com TRAVELXS_FIRST_USER
     const tokenFirstUser = await authenticateTravelXs(
@@ -398,6 +382,46 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
     console.log(
       'Resposta final preparada, número de resultados: ',
       finalResults.length
+    )
+    return response
+  } catch (error) {
+    return null
+  }
+}
+
+export const findAccommodationsOnTravelXs = async (req, res) => {
+  // const {
+  //   checkInDate,
+  //   checkOutDate,
+  //   days,
+  //   adultCount,
+  //   childsAges,
+  //   mealType,
+  //   unavailable
+  // } = req.query
+
+  // if (!checkInDate || !checkOutDate || !days || !adultCount || !mealType) {
+  //   return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
+  // }
+
+  try {
+    const checkInDate = '12/12/2024'
+    const checkOutDate = '14/12/2024'
+    const days = '2'
+    const adultCount = '2'
+    const childsAges = ''
+    const mealType = 'only_breakfast'
+    const unavailable = 'true'
+
+    const response = await formatTravelXsData(
+      checkInDate,
+      checkOutDate,
+      days,
+      adultCount,
+      // parseInt(adultCount),
+      childsAges ? childsAges.split(',').length : 0,
+      mealType,
+      unavailable
     )
     res.json(response)
   } catch (error) {
