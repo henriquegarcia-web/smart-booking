@@ -72,7 +72,7 @@ export const findAccommodations = async (req, res) => {
       mealType
     )
 
-    const travelXsResults = formatTravelXsData(
+    const travelXsResults = await formatTravelXsData(
       checkInDate,
       checkOutDate,
       days,
@@ -82,11 +82,22 @@ export const findAccommodations = async (req, res) => {
       unavailable
     )
 
-    const response = [...connectTravelResults, ...travelXsResults.filterResults]
+    // ================================================== MERGEAR REMOVENDO IGUAIS
+    const filterResults = [
+      ...connectTravelResults.filterResults,
+      ...travelXsResults.filterResults
+    ]
+
+    const response = {
+      filterDateRange: `${checkInDate} a ${checkOutDate}`,
+      filterAdults: parseInt(adultCount),
+      filterChilds: childsAges ? childsAges.split(',').length : 0,
+      filterResults: filterResults
+    }
 
     console.log(
       'Resposta final preparada, número de resultados: ',
-      response.length
+      response.filterResults.length
     )
     res.json(response)
   } catch (error) {

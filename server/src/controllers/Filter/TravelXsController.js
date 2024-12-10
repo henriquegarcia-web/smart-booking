@@ -385,7 +385,7 @@ export const formatTravelXsData = async (
     )
     return response
   } catch (error) {
-    return null
+    throw error
   }
 }
 
@@ -404,21 +404,21 @@ export const findAccommodationsOnTravelXs = async (req, res) => {
   //   return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
   // }
 
-  try {
-    const checkInDate = '12/12/2024'
-    const checkOutDate = '14/12/2024'
-    const days = '2'
-    const adultCount = '2'
-    const childsAges = ''
-    const mealType = 'only_breakfast'
-    const unavailable = 'true'
+  const checkInDate = '12/12/2024'
+  const checkOutDate = '14/12/2024'
+  const days = '2'
+  const adultCount = '2'
+  const childsAges = ''
+  const mealType = 'only_breakfast'
+  const unavailable = 'true'
 
+  try {
     const response = await formatTravelXsData(
       checkInDate,
       checkOutDate,
       days,
-      adultCount,
-      // parseInt(adultCount),
+      // adultCount,
+      parseInt(adultCount),
       childsAges ? childsAges.split(',').length : 0,
       mealType,
       unavailable

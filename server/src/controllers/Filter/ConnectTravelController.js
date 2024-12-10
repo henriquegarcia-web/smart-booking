@@ -11,7 +11,7 @@ import { io } from '../../server.js'
 dotenv.config()
 
 const DEFAULT_DELAY = 1500
-const LONGER_DELAY = 4000
+const LONGER_DELAY = 2500
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -86,7 +86,7 @@ const authenticateUser = async (browser) => {
   const page = await browser.newPage()
 
   try {
-    await page.goto(process.env.CONNECT_TRAVEL_BASE_URL, {
+    await page.goto(process.env.CONNECT_TRAVEL_REDIRECT_URL, {
       waitUntil: 'networkidle0'
     })
     await delay(DEFAULT_DELAY)
