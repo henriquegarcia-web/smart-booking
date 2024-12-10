@@ -63,27 +63,16 @@ export const findAccommodations = async (req, res) => {
   const accommodationsCount = 1
 
   try {
-    let connectTravelResults, travelXsResults
-    let filterErrors = 'without_error'
-    let filterResults = []
-
-    try {
-      connectTravelResults = await executeScraping(
+    const [connectTravelResult, travelXsResult] = await Promise.allSettled([
+      executeScraping(
         checkInDate,
         checkOutDate,
         accommodationsCount,
         parseInt(adultCount),
         childsAges ? childsAges.split(',').length : 0,
         mealType
-      )
-      filterResults = [...filterResults, ...connectTravelResults.filterResults]
-    } catch (error) {
-      console.error('Erro ao obter resultados do ConnectTravel:', error.message)
-      filterErrors = 'connect_travel'
-    }
-
-    try {
-      travelXsResults = await formatTravelXsData(
+      ),
+      formatTravelXsData(
         checkInDate,
         checkOutDate,
         days,
@@ -92,9 +81,31 @@ export const findAccommodations = async (req, res) => {
         mealType,
         unavailable
       )
-      filterResults = [...filterResults, ...travelXsResults.filterResults]
-    } catch (error) {
-      console.error('Erro ao obter resultados do TravelXs:', error.message)
+    ])
+
+    let filterErrors = 'without_error'
+    let filterResults = []
+
+    if (connectTravelResult.status === 'fulfilled') {
+      filterResults = [
+        ...filterResults,
+        ...connectTravelResult.value.filterResults
+      ]
+    } else {
+      console.error(
+        'Erro ao obter resultados do ConnectTravel:',
+        connectTravelResult.reason
+      )
+      filterErrors = 'connect_travel'
+    }
+
+    if (travelXsResult.status === 'fulfilled') {
+      filterResults = [...filterResults, ...travelXsResult.value.filterResults]
+    } else {
+      console.error(
+        'Erro ao obter resultados do TravelXs:',
+        travelXsResult.reason
+      )
       filterErrors =
         filterErrors === 'connect_travel' ? 'all_portals' : 'travel_xs'
     }
@@ -121,37 +132,48 @@ export const findAccommodations = async (req, res) => {
   }
 
   // try {
-  //   const connectTravelResults = await executeScraping(
-  //     checkInDate,
-  //     checkOutDate,
-  //     accommodationsCount,
-  //     parseInt(adultCount),
-  //     childsAges ? childsAges.split(',').length : 0,
-  //     mealType
-  //   )
+  //   let connectTravelResults, travelXsResults
+  //   let filterErrors = 'without_error'
+  //   let filterResults = []
 
-  //   const travelXsResults = await formatTravelXsData(
-  //     checkInDate,
-  //     checkOutDate,
-  //     days,
-  //     adultCount,
-  //     childsAges,
-  //     mealType,
-  //     unavailable
-  //   )
+  //   try {
+  //     connectTravelResults = await executeScraping(
+  //       checkInDate,
+  //       checkOutDate,
+  //       accommodationsCount,
+  //       parseInt(adultCount),
+  //       childsAges ? childsAges.split(',').length : 0,
+  //       mealType
+  //     )
+  //     filterResults = [...filterResults, ...connectTravelResults.filterResults]
+  //   } catch (error) {
+  //     console.error('Erro ao obter resultados do ConnectTravel:', error.message)
+  //     filterErrors = 'connect_travel'
+  //   }
 
-  //   // ================================================== MERGEAR REMOVENDO IGUAIS
-  //   const filterResults = [
-  //     ...travelXsResults.filterResults,
-  //     ...connectTravelResults.filterResults
-  //   ]
+  //   try {
+  //     travelXsResults = await formatTravelXsData(
+  //       checkInDate,
+  //       checkOutDate,
+  //       days,
+  //       adultCount,
+  //       childsAges,
+  //       mealType,
+  //       unavailable
+  //     )
+  //     filterResults = [...filterResults, ...travelXsResults.filterResults]
+  //   } catch (error) {
+  //     console.error('Erro ao obter resultados do TravelXs:', error.message)
+  //     filterErrors =
+  //       filterErrors === 'connect_travel' ? 'all_portals' : 'travel_xs'
+  //   }
 
   //   const response = {
   //     filterDateRange: `${checkInDate} a ${checkOutDate}`,
   //     filterAdults: parseInt(adultCount),
   //     filterChilds: childsAges ? childsAges.split(',').length : 0,
   //     filterResults: filterResults,
-  //     filterErrors: // null | 'travel_xs' | 'connect_travel' | 'all_portals'
+  //     filterErrors: filterErrors
   //   }
 
   //   console.log(
