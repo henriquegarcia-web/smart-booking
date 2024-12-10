@@ -7,7 +7,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm, Controller } from 'react-hook-form'
 
 import io from 'socket.io-client'
-export const socket = io('http://localhost:3000')
+export const socket = io(import.meta.env.VITE_SERVER_BASE_URL)
 
 const validateOtpSchema = Yup.object().shape({
   otp: Yup.string().required('O código é obrigatório').defined()
