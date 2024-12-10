@@ -24,7 +24,6 @@ export const findAccommodations = async (req, res) => {
     !days ||
     !accommodationsCount ||
     !adultCount ||
-    !childsAges ||
     !mealType
   ) {
     return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
@@ -77,7 +76,7 @@ export const findAccommodations = async (req, res) => {
     }
 
     if (travelXsResult.status === 'fulfilled') {
-      filterResults = [...filterResults, ...travelXsResult.value.filterResults]
+      filterResults = [...travelXsResult.value.filterResults, ...filterResults]
     } else {
       console.error(
         'Erro ao obter resultados do TravelXs:',

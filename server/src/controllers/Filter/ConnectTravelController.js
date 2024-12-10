@@ -440,7 +440,6 @@ export const findAccommodationsOnConnectTravel = async (req, res) => {
     !checkOutDate ||
     !accommodationsCount ||
     !adultCount ||
-    !childsAges ||
     !mealType
   ) {
     return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })

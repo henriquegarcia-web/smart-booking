@@ -37,6 +37,7 @@ export interface IFilterResultsData {
   filterChilds: number
   filterDateRange: string
   filterResults: IAccommodation[]
+  filterErrors?: string
 }
 
 export interface IFilterResults {

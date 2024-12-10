@@ -119,9 +119,7 @@ export const FormInputWrapper = styled.div`
 
 export const SearchAccommodationFormFooter = styled.div`
   display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-  column-gap: 10px;
+  justify-content: space-between;
   width: 100%;
 
   .ant-form-item {
@@ -133,4 +131,20 @@ export const SearchAccommodationFormFooter = styled.div`
       margin-bottom: -4px !important;
     }
   }
+`
+
+export const FormFooterErrors = styled.div`
+  display: flex;
+  flex-direction: column;
+  row-gap: 8px;
+
+  font-size: 14px;
+  line-height: 14px;
+  font-weight: 400;
+`
+
+export const FormFooterInputs = styled.div`
+  display: flex;
+  align-items: flex-end;
+  column-gap: 10px;
 `

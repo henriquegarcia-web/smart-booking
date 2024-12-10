@@ -7,6 +7,7 @@ const useFilterAccommodations = (
   filterMode: string
 ) => {
   return useQuery<IFilterResultsData>({
+    // queryKey: ['filterAccommodations', filterData],
     queryKey: ['filterAccommodations', JSON.stringify(filterData), filterMode],
     queryFn: () => fetchAccommodations(filterData, filterMode),
     enabled: !!filterData

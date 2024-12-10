@@ -7,7 +7,8 @@ import {
   ConfigProvider,
   Tooltip,
   Select,
-  InputNumber
+  InputNumber,
+  Tag
 } from 'antd'
 const { RangePicker } = DatePicker
 import locale from 'antd/locale/pt_BR'
@@ -169,6 +170,10 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
       })
     )
     return formattedCountFullOptions
+  }
+
+  const onClickStopProg = (e) => {
+    e.stopPropagation()
   }
 
   // useEffect(() => {
@@ -387,36 +392,51 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
       </S.ApartmentsFormWrapper>
 
       <S.SearchAccommodationFormFooter>
-        <Form.Item
-          label="Selecione uma opção de filtro"
-          // validateStatus={}
-          // help=''
-        >
-          <Select
-            placeholder="Selecione uma opção"
-            defaultValue={filterModeSchemeData[0].modeId}
-            value={filterMode}
-            onChange={(modeId) => {
-              handleChangeFilterMode(modeId)
-            }}
-            options={formattedFilterModeScheme}
-            disabled={!isFormValid || filterResults?.isLoading || false}
-          />
-        </Form.Item>
-        <Button
-          disabled={!isFormValid || filterResults?.isLoading}
-          onClick={handleResetForm}
-        >
-          Limpar
-        </Button>
-        <Button
-          type="primary"
-          htmlType="submit"
-          disabled={!isFormValid}
-          loading={isSubmitting || filterResults?.isLoading}
-        >
-          {filterResults?.isLoading ? 'Buscando' : 'Buscar'}
-        </Button>
+        <S.FormFooterErrors>
+          {filterResults.data?.filterErrors !== 'without_error' && (
+            <>
+              Ocorreu um erro, por favor busque novamente!
+              <Tag color="orangered">
+                {filterResults.data?.filterErrors === 'all_portals' &&
+                  'Todos os portais'}
+                {filterResults.data?.filterErrors === 'travel_xs' &&
+                  'Connect Travel'}
+                {filterResults.data?.filterErrors === 'connect_travel' &&
+                  'Travel XS'}
+              </Tag>
+            </>
+          )}
+        </S.FormFooterErrors>
+
+        <S.FormFooterInputs>
+          <Form.Item label="Selecione uma opção de filtro">
+            <Select
+              placeholder="Selecione uma opção"
+              onClick={onClickStopProg}
+              defaultValue={filterModeSchemeData[0].modeId}
+              value={filterMode}
+              onChange={(modeId) => {
+                handleChangeFilterMode(modeId)
+              }}
+              options={formattedFilterModeScheme}
+              disabled={!isFormValid || filterResults?.isLoading || false}
+            />
+          </Form.Item>
+          <Button
+            disabled={!isFormValid || filterResults?.isLoading}
+            onClick={handleResetForm}
+          >
+            Limpar
+          </Button>
+          <Button
+            type="primary"
+            htmlType="submit"
+            disabled={!isFormValid}
+            loading={isSubmitting || filterResults?.isLoading}
+          >
+            {filterResults?.isLoading ? 'Buscando' : 'Buscar'}
+          </Button>
+        </S.FormFooterInputs>
       </S.SearchAccommodationFormFooter>
     </S.SearchAccommodationForm>
   )
