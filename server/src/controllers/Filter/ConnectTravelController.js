@@ -426,33 +426,33 @@ export const executeScraping = async (
 // ========================================== CONNECT TRAVEL
 
 export const findAccommodationsOnConnectTravel = async (req, res) => {
-  // const {
-  //   checkInDate,
-  //   checkOutDate,
-  //   accommodationsCount,
-  //   adultCount,
-  //   childsAges,
-  //   mealType
-  // } = req.query
+  const {
+    checkInDate,
+    checkOutDate,
+    accommodationsCount,
+    adultCount,
+    childsAges,
+    mealType
+  } = req.query
 
-  // if (
-  //   !checkInDate ||
-  //   !checkOutDate ||
-  //   !accommodationsCount ||
-  //   !adultCount ||
-  //   !childsAges ||
-  //   !mealType
-  // ) {
-  //   return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
-  // }
+  if (
+    !checkInDate ||
+    !checkOutDate ||
+    !accommodationsCount ||
+    !adultCount ||
+    !childsAges ||
+    !mealType
+  ) {
+    return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes' })
+  }
 
   try {
-    const checkInDate = '12/12/2024'
-    const checkOutDate = '14/12/2024'
-    const accommodationsCount = 1
-    const adultCount = '2'
-    const childsAges = ''
-    const mealType = 'only_breakfast'
+    // const checkInDate = '12/12/2024'
+    // const checkOutDate = '14/12/2024'
+    // const accommodationsCount = 1
+    // const adultCount = '2'
+    // const childsAges = ''
+    // const mealType = 'only_breakfast'
 
     const response = await executeScraping(
       checkInDate,

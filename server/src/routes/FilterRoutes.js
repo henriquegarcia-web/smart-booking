@@ -11,25 +11,3 @@ router.get('/accommodations/connect-travel', findAccommodationsOnConnectTravel)
 router.get('/accommodations', findAccommodations)
 
 export default router
-
-/**
- 
-    // Implementar no puppeteer um recurso que identifica que ja esta
-    // logado (ou tenta acessar direto o main de inicio!!!) para
-    // encurtar tempo
-
-    Implementar funções assincronas de execução, mas retorna
-    quando todas estiverem prontas
-    Colocar uma awaitforselector de forma otimizada no código e
-    ver se resolve
-
-    // pedir para IA otimizar código
-    // remover imagens
-
-    
-    criar validação para quando uma das respoonse vem zerada
-    
-    // modal de validação do código nao pdoe ser fechavel
-    
-    remover codigos padrao de chamada req
-*/
