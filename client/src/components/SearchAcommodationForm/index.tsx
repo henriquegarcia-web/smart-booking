@@ -393,7 +393,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
           {!!filterResults?.data?.filterErrors &&
             filterResults?.data?.filterErrors !== 'without_error' && (
               <>
-                Ocorreu um erro, por favor busque novamente!
+                Ocorreu um erro em:
                 <Tag color="orangered">
                   {filterResults.data?.filterErrors === 'all_portals' &&
                     'Todos os portais'}
@@ -402,6 +402,7 @@ const SearchAccommodationForm = ({}: ISearchAccommodationForm) => {
                   {filterResults.data?.filterErrors === 'connect_travel' &&
                     'Travel XS'}
                 </Tag>
+                Por favor busque novamente!
               </>
             )}
         </S.FormFooterErrors>

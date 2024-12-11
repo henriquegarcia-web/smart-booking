@@ -38,6 +38,9 @@ export const findAccommodations = async (req, res) => {
   // const unavailable = 'true'
   // const accommodationsCount = 1
 
+  let filterErrors = 'without_error'
+  let filterResults = []
+
   try {
     const [connectTravelResult, travelXsResult] = await Promise.allSettled([
       executeScraping(
@@ -58,9 +61,6 @@ export const findAccommodations = async (req, res) => {
         unavailable
       )
     ])
-
-    let filterErrors = 'without_error'
-    let filterResults = []
 
     if (connectTravelResult.status === 'fulfilled') {
       filterResults = [
@@ -105,5 +105,8 @@ export const findAccommodations = async (req, res) => {
       error: 'Erro ao obter disponibilidade de hotéis',
       details: error.message
     })
+  } finally {
+    filterErrors = 'without_error'
+    filterResults = []
   }
 }

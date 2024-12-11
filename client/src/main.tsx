@@ -10,6 +10,9 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { ToastContainer, Bounce } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
+import 'dayjs/locale/pt-br'
+import 'jspdf-autotable'
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

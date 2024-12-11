@@ -8,7 +8,7 @@ import * as S from './styles'
 
 import locale from 'antd/locale/pt_BR'
 import dayjs, { Dayjs } from 'dayjs'
-import 'dayjs/locale/pt-br'
+import { jsPDF } from 'jspdf'
 dayjs.locale('pt-br')
 
 import { OTPForm, SearchAcommodationForm, ViewHeader } from '@/components'
@@ -120,7 +120,60 @@ const AccommodationSearchView = ({}: IAccommodationSearchView) => {
     setSelectedFileType(type)
   }
 
-  const generateAndDownloadPdf = (data: IFilterResultsData) => {}
+  // const generateAndDownloadPdf = (data: IFilterResultsData) => {}
+
+  const generateAndDownloadPdf = (data: IFilterResultsData) => {
+    try {
+      setIsDownloadLoading(true)
+
+      const doc = new jsPDF()
+
+      // Add title
+      doc.setFontSize(16)
+      doc.text('Lista de Hospedagem', 14, 15)
+
+      // Add filter information
+      doc.setFontSize(12)
+      doc.text(
+        `${data.filterDateRange}${
+          selectedDiscount > 0 ? `/${selectedDiscount}%` : ''
+        }`,
+        14,
+        25
+      )
+      doc.text(`${data.filterAdults} adulto(s)`, 14, 31)
+      if (data.filterChilds > 0) {
+        doc.text(`${data.filterChilds} criança(s)`, 14, 37)
+      }
+
+      // Create table data
+      const tableData = data.filterResults.map((accommodation) => [
+        accommodation.accommodationName,
+        applyDiscount(
+          accommodation.accommodationPrice,
+          selectedDiscount,
+          false
+        ),
+        accommodation.accommodationMeal
+      ])
+
+      // Add table
+      ;(doc as any).autoTable({
+        startY: data.filterChilds > 0 ? 43 : 37,
+        head: [['Hospedagem', 'Preço', 'Tipo de Pensão']],
+        body: tableData
+      })
+
+      // Save the PDF
+      doc.save('lista_de_hospedagem.pdf')
+      toast('Download realizado com sucesso')
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      toast('Falha ao realizar download')
+    } finally {
+      setIsDownloadLoading(false)
+    }
+  }
 
   const generateAndDownloadTxt = (data: IFilterResultsData) => {
     try {

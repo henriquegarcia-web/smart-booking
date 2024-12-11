@@ -120,6 +120,7 @@ export const FormInputWrapper = styled.div`
 export const SearchAccommodationFormFooter = styled.div`
   display: flex;
   justify-content: space-between;
+  align-items: flex-end;
   width: 100%;
 
   .ant-form-item {
@@ -136,11 +137,17 @@ export const SearchAccommodationFormFooter = styled.div`
 export const FormFooterErrors = styled.div`
   display: flex;
   flex-direction: column;
-  row-gap: 8px;
+  row-gap: 6px;
 
-  font-size: 14px;
-  line-height: 14px;
-  font-weight: 400;
+  font-size: 12px;
+  line-height: 12px;
+  font-weight: 500;
+
+  color: orangered;
+
+  .ant-tag {
+    width: fit-content;
+  }
 `
 
 export const FormFooterInputs = styled.div`

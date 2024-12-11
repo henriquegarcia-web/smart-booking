@@ -14,8 +14,6 @@ const fetchAccommodations = async (filterData: IFilterData) => {
       accommodationsCount
     } = filterData
 
-    console.log(filterData)
-
     const response = await api.get(filterData.filterMode, {
       params: {
         checkInDate,
